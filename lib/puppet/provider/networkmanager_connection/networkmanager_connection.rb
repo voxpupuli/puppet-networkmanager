@@ -7,8 +7,8 @@ class Puppet::Provider::NetworkmanagerConnection::NetworkmanagerConnection < Pup
   def get(context, name)
     result = []
 
-    Puppet::Util::Log.new(:level => :debug, :message => "context: #{context}")
-    Puppet::Util::Log.new(:level => :debug, :message => "name: #{name}")
+    Puppet::Util::Log.new(level: :debug, message: "context: #{context}")
+    Puppet::Util::Log.new(level: :debug, message: "name: #{name}")
 
     if name.empty?
       list_connections.each do |connection|
@@ -16,7 +16,7 @@ class Puppet::Provider::NetworkmanagerConnection::NetworkmanagerConnection < Pup
         # Convert the data to a hash with key-value pairs and convert empty values to nil
         data = data.map { |item| item.split(':', 2).map { |v| v.strip.empty? ? nil : v.strip } }.to_h
 
-        Puppet::Util::Log.new(:level => :debug, :message => "data: #{data}")
+        Puppet::Util::Log.new(level: :debug, message: "data: #{data}")
 
         ipv4_addresses = if data['ipv4.addresses']
                            [data['ipv4.addresses']]
@@ -71,6 +71,6 @@ class Puppet::Provider::NetworkmanagerConnection::NetworkmanagerConnection < Pup
   end
 
   def nmcli(*args)
-    Puppet::Util::Execution.execute(['/usr/bin/nmcli'] + args.flatten)
+    Puppet::Util::Execution.execute(['/usr/bin/nmcli'] + args)
   end
 end
