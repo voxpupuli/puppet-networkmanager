@@ -4,11 +4,6 @@ require 'puppet/resource_api/simple_provider'
 
 # Implementation for the networkmanager_connection type using the Resource API.
 class Puppet::Provider::NetworkmanagerConnection::NetworkmanagerConnection < Puppet::ResourceApi::SimpleProvider
-
-  def list_connections
-    nmcli('-t', '-f', 'name', 'connection', 'show').split("\n").map(&:strip)
-  end
-
   def get(context, name)
     result = []
 
@@ -70,6 +65,10 @@ class Puppet::Provider::NetworkmanagerConnection::NetworkmanagerConnection < Pup
   end
 
   private
+
+  def list_connections
+    nmcli('-t', '-f', 'name', 'connection', 'show').split("\n").map(&:strip)
+  end
 
   def nmcli(*args)
     Puppet::Util::Execution.execute(['/usr/bin/nmcli'] + args.flatten)
