@@ -47,15 +47,24 @@ EOS
       desc:    'An array of static IPv4 addresses (e.g., ["192.168.1.10/24", "192.168.1.11/24"]).',
     },
 
+    ipv4_dns: {
+      type:    'Optional[Array[Pattern[/\\A\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\z/]]]',
+      desc:    'An array of DNS servers (e.g., ["8.8.8.8"]).',
+    },
+
     ipv6_method: {
       type:    'Enum[auto, manual, disabled]',
       desc:    'The IPv6 configuration method (e.g., auto, manual, disabled).',
     },
 
     ipv6_addresses: {
-      # type:    'Optional[Array[Pattern[/\\A\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\/\\d{1,2}\\z/]]]',
       type:    'Optional[Array[String[1]]]',
       desc:    'An array of static IPv6 addresses (e.g., ["2001:db8::1/64", "2001:db8::2/64"]).',
+    },
+
+    ipv6_dns: {
+      type:    'Optional[Array[String[1]]]',
+      desc:    'An array of IPv6 DNS servers (e.g., ["2001:4860:4860::8888"]).',
     },
 
     general_state: {
