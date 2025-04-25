@@ -82,9 +82,11 @@ class Puppet::Provider::NetworkmanagerConnection::NetworkmanagerConnection < Pup
       ipv4_method: data['ipv4.method'],
       ipv4_addresses: extract_addresses(data, 'IP4.ADDRESS'),
       ipv4_dns: extract_addresses(data, 'IP4.DNS'),
+      ipv4_gateway: data['IP4.GATEWAY'],
       ipv6_method: data['ipv6.method'],
       ipv6_addresses: extract_addresses(data, 'IP6.ADDRESS'),
       ipv6_dns: extract_addresses(data, 'IP6.DNS'),
+      ipv6_gateway: data['IP6.GATEWAY'],
       general_state: (data['GENERAL.STATE'] || 'unknown').downcase,
       uuid: data['connection.uuid'],
     }

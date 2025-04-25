@@ -52,6 +52,11 @@ EOS
       desc:    'An array of DNS servers (e.g., ["8.8.8.8"]).',
     },
 
+    ipv4_gateway: {
+      type:    'Optional[Pattern[/\\A\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\z/]]',
+      desc:    'The IPv4 gateway address (e.g., "192.168.0.1").',
+    },
+
     ipv6_method: {
       type:    'Enum[auto, manual, disabled]',
       desc:    'The IPv6 configuration method (e.g., auto, manual, disabled).',
@@ -65,6 +70,11 @@ EOS
     ipv6_dns: {
       type:    'Optional[Array[String[1]]]',
       desc:    'An array of IPv6 DNS servers (e.g., ["2001:4860:4860::8888"]).',
+    },
+
+    ipv6_gateway: {
+      type:    'Optional[String[1]]',
+      desc:    'The IPv6 gateway address (e.g., "2001:db8::1").',
     },
 
     general_state: {
