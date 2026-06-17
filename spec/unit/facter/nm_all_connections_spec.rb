@@ -38,4 +38,12 @@ describe :nm_all_connections, type: :fact do
       }
     )
   end
+
+  it 'keeps fields intact when the final value contains a colon' do
+    allow(Facter::Core::Execution).to receive(:execute)
+      .with('nmcli -t -f name,uuid,type,autoconnect,autoconnect-priority,readonly,dbus-path,active,device,state,active-path,filename con show')
+      .and_return("foo:123:ethernet:yes:0:no:/dbus/1:yes:eth0:activated:/active/1:/etc/foo:profile.nmconnection\n")
+
+    expect(fact.value['foo']['filename']).to eq('/etc/foo:profile.nmconnection')
+  end
 end

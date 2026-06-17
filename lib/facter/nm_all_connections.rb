@@ -29,7 +29,7 @@ Facter.add(:nm_all_connections) do
     nmcli_output.each_line do |line|
       next if line.strip.empty?
 
-      name,uuid,type,autoconnect,autoconnect_priority,readonly,dbus_path,active,device,state,active_path,filename = line.strip.split(':')
+      name,uuid,type,autoconnect,autoconnect_priority,readonly,dbus_path,active,device,state,active_path,filename = line.strip.split(':', 12)
 
       connections[name] = {}
       connections[name][:uuid] = uuid unless uuid.empty?

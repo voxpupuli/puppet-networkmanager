@@ -26,7 +26,7 @@ Facter.add(:nm_all_devices) do
     nmcli_output.each_line do |line|
       next if line.strip.empty?
 
-      device, type, state, ip4_connectivity, ip6_connectivity, dbus_path, connection, con_uuid, con_path = line.strip.split(':')
+      device, type, state, ip4_connectivity, ip6_connectivity, dbus_path, connection, con_uuid, con_path = line.strip.split(':', 9)
 
       devices[device] = {}
       devices[device][:type] = type unless type.empty?
