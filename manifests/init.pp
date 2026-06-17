@@ -97,10 +97,12 @@ class networkmanager (
   networkmanager_connection { 'enp0s8':
     ensure         => 'present',
     type           => '802-3-ethernet',
+    device         => 'enp0s8',
     ipv4_method    => 'manual',
-    ipv4_addresses => ['10.0.2.15/24', '1.2.3.4/24'],
-    ipv4_dns       => ['8.8.8.8', '1.1.1.1'],
-    ipv6_method    => 'disabled',
+    ipv4_addresses => ['10.0.2.15/24'],
+    ipv4_dns       => ['8.8.8.8'],
+    ipv4_gateway   => '10.0.2.2',
+    ipv6_method    => 'ignore',
     reapply        => true,
   }
 }

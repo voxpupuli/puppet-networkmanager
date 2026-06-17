@@ -91,11 +91,6 @@ EOS
       behaviour: :read_only,
     },
 
-    uuid: {
-      type:    'Optional[String]',
-      desc:    'The UUID of the connection (if applicable).',
-    },
-
     # ... weitere Attribute
   }
 )

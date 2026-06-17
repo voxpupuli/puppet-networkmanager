@@ -188,7 +188,6 @@ class Puppet::Provider::NetworkmanagerConnection::NetworkmanagerConnection < Pup
   #   ipv4.method:auto
   #   IP4.ADDRESS[1]:192.168.1.100/24
   #   IP4.DNS[1]:8.8.8.8
-  #   connection.uuid:123e4567-e89b-12d3-a456-426614174000
   #
   def fetch_connection_data(context, connection)
     # Execute the `nmcli` command to fetch connection details.
@@ -213,7 +212,6 @@ class Puppet::Provider::NetworkmanagerConnection::NetworkmanagerConnection < Pup
       ipv6_dns: split_profile_list(data['ipv6.dns']),
       ipv6_gateway: data['ipv6.gateway'],
       general_state: normalize_general_state(data['GENERAL.STATE']),
-      uuid: data['connection.uuid'],
     }
   rescue Puppet::ExecutionFailure => e
     context.err("Error fetching NetworkManager connection '#{connection}': #{e}") if context

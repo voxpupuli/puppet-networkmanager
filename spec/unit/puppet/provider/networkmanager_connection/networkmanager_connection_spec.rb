@@ -94,7 +94,6 @@ RSpec.describe Puppet::Provider::NetworkmanagerConnection::NetworkmanagerConnect
                                      ipv6_dns: nil,
                                      ipv6_gateway: nil,
                                      general_state: 'connected',
-                                     uuid: '123',
                                    },
                                  ])
     end
@@ -119,7 +118,6 @@ RSpec.describe Puppet::Provider::NetworkmanagerConnection::NetworkmanagerConnect
                                      ipv6_dns: nil,
                                      ipv6_gateway: nil,
                                      general_state: 'unknown',
-                                     uuid: nil,
                                    },
                                  ])
     end
