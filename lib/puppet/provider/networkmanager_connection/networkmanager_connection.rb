@@ -42,7 +42,77 @@ class Puppet::Provider::NetworkmanagerConnection::NetworkmanagerConnection < Pup
     []
   end
 
+  def set(context, changes)
+    changes.each do |change|
+      is = change[:is] || {}
+      should = change[:should] || {}
+      name = should[:name] || is[:name]
+
+      if should[:ensure] == 'absent'
+        context.notice("Deleting '#{name}'")
+        delete_connection(name)
+      elsif is.empty? || is[:ensure] == 'absent'
+        context.notice("Creating '#{name}'")
+        create_connection(name, should)
+      else
+        context.notice("Updating '#{name}'")
+        update_connection(name, should)
+      end
+    end
+  rescue Puppet::ExecutionFailure => e
+    context.err("Failed to apply networkmanager_connection changes: #{e}")
+    raise
+  end
+
   private
+
+  PROPERTY_MAP = {
+    device: 'connection.interface-name',
+    ipv4_method: 'ipv4.method',
+    ipv4_addresses: 'ipv4.addresses',
+    ipv4_dns: 'ipv4.dns',
+    ipv4_gateway: 'ipv4.gateway',
+    ipv6_method: 'ipv6.method',
+    ipv6_addresses: 'ipv6.addresses',
+    ipv6_dns: 'ipv6.dns',
+    ipv6_gateway: 'ipv6.gateway',
+  }.freeze unless const_defined?(:PROPERTY_MAP, false)
+
+  def create_connection(name, resource)
+    args = ['connection', 'add', 'con-name', name, 'type', resource.fetch(:type)]
+    args += ['ifname', resource[:device]] if resource[:device]
+    nmcli(*args)
+    apply_connection_settings(name, resource)
+  end
+
+  def update_connection(name, resource)
+    apply_connection_settings(name, resource)
+  end
+
+  def delete_connection(name)
+    nmcli('connection', 'delete', name)
+  end
+
+  def apply_connection_settings(name, resource)
+    modifications = []
+
+    PROPERTY_MAP.each do |key, nmcli_key|
+      next unless resource.key?(key)
+
+      value = normalize_setting_value(resource[key])
+      modifications += [nmcli_key, value]
+    end
+
+    return if modifications.empty?
+
+    nmcli('connection', 'modify', name, *modifications)
+  end
+
+  def normalize_setting_value(value)
+    return '' if value.nil?
+
+    value.is_a?(Array) ? value.join(',') : value.to_s
+  end
 
   # Lists all available NetworkManager connections by name.
   # This method executes the `nmcli connection show` command.
@@ -134,6 +204,9 @@ class Puppet::Provider::NetworkmanagerConnection::NetworkmanagerConnection < Pup
   # @return [String] The output of the command.
   #
   def nmcli(*args)
-    Puppet::Util::Execution.execute(['/usr/bin/nmcli'] + args)
+    command = Puppet::Util.which('nmcli')
+    raise Puppet::Error, 'Unable to find nmcli in PATH' unless command
+
+    Puppet::Util::Execution.execute([command] + args)
   end
 end
