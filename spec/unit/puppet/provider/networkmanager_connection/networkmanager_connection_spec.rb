@@ -19,13 +19,13 @@ RSpec.describe Puppet::Provider::NetworkmanagerConnection::NetworkmanagerConnect
   describe '#get' do
     it 'returns all connections when no filter is provided' do
       allow(provider).to receive(:list_connections).and_return(%w[foo bar])
-      allow(provider).to receive(:fetch_connection_data).with('foo').and_return(
+      allow(provider).to receive(:fetch_connection_data).with(context, 'foo').and_return(
         {
           name: 'foo',
           ensure: 'present',
         }
       )
-      allow(provider).to receive(:fetch_connection_data).with('bar').and_return(
+      allow(provider).to receive(:fetch_connection_data).with(context, 'bar').and_return(
         {
           name: 'bar',
           ensure: 'present',
@@ -45,7 +45,7 @@ RSpec.describe Puppet::Provider::NetworkmanagerConnection::NetworkmanagerConnect
     end
 
     it 'normalizes and filters requested names' do
-      allow(provider).to receive(:fetch_connection_data).with('foo').and_return(
+      allow(provider).to receive(:fetch_connection_data).with(context, 'foo').and_return(
         {
           name: 'foo',
           ensure: 'present',
@@ -65,6 +65,13 @@ RSpec.describe Puppet::Provider::NetworkmanagerConnection::NetworkmanagerConnect
       expect(context).to receive(:err).with(%r{nmcli failed})
 
       expect(provider.get(context, nil)).to eq([])
+    end
+
+    it 'logs when fetching a single connection fails' do
+      allow(provider).to receive(:nmcli).with('-t', 'connection', 'show', 'foo').and_raise(Puppet::ExecutionFailure, 'connection missing')
+      expect(context).to receive(:err).with(%r{Error fetching NetworkManager connection 'foo': connection missing})
+
+      expect(provider.get(context, 'foo')).to eq([])
     end
 
     it 'normalizes general state values into the type enum' do

@@ -29,9 +29,9 @@ class Puppet::Provider::NetworkmanagerConnection::NetworkmanagerConnection < Pup
 
     # Fetch all connections if no specific names are provided, otherwise fetch each requested connection.
     connections = if requested_names.empty?
-                    list_connections.map { |connection| fetch_connection_data(connection) }
+                    list_connections.map { |connection| fetch_connection_data(context, connection) }
                   else
-                    requested_names.map { |connection| fetch_connection_data(connection) }
+                    requested_names.map { |connection| fetch_connection_data(context, connection) }
                   end
 
     # Remove any nil entries (e.g., if a connection fetch failed).
@@ -161,7 +161,7 @@ class Puppet::Provider::NetworkmanagerConnection::NetworkmanagerConnection < Pup
   #   IP4.DNS[1]:8.8.8.8
   #   connection.uuid:123e4567-e89b-12d3-a456-426614174000
   #
-  def fetch_connection_data(connection)
+  def fetch_connection_data(context, connection)
     # Execute the `nmcli` command to fetch connection details.
     data = nmcli('-t', 'connection', 'show', connection).split("\n").map(&:strip)
 
@@ -186,7 +186,9 @@ class Puppet::Provider::NetworkmanagerConnection::NetworkmanagerConnection < Pup
       general_state: normalize_general_state(data['GENERAL.STATE']),
       uuid: data['connection.uuid'],
     }
-  rescue Puppet::ExecutionFailure
+  rescue Puppet::ExecutionFailure => e
+    context.err("Error fetching NetworkManager connection '#{connection}': #{e}") if context
+
     # Return `nil` if the `nmcli` command fails for this connection.
     nil
   end
