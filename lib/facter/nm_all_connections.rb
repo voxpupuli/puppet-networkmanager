@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'shellwords'
+
 # @summary
 #   Returns a hash of all network connections managed by NetworkManager.
 #   This fact is only available on Linux systems with NetworkManager installed.
@@ -17,6 +19,8 @@
 #   - state: The state of the device (e.g., connected, disconnected).
 #   - type: The type of the device (e.g., ethernet, wifi).
 #   - uuid: The UUID of the connection.
+#   - ipv4: A hash with configured IPv4 settings.
+#   - ipv6: A hash with configured IPv6 settings.
 #
 Facter.add(:nm_all_connections) do
   confine kernel: 'Linux'
@@ -46,9 +50,50 @@ Facter.add(:nm_all_connections) do
         connections[name]['filename'] = filename unless filename.empty?
       end
 
+      connections.each do |name, connection|
+        details = fetch_connection_details(name)
+        connection.merge!(details) if details
+      end
+
       connections
     rescue StandardError
       nil
     end
   end
+end
+
+def fetch_connection_details(connection)
+  output = Facter::Core::Execution.execute("nmcli -t connection show #{Shellwords.escape(connection)}")
+  data = output.each_line.map(&:strip).reject(&:empty?).map do |item|
+    item.split(':', 2).map { |value| value.strip.empty? ? nil : value.strip }
+  end.to_h
+
+  details = {}
+
+  ipv4 = {
+    'method' => data['ipv4.method'],
+    'address' => split_profile_list(data['ipv4.addresses']),
+    'dns' => split_profile_list(data['ipv4.dns']),
+    'gateway' => data['ipv4.gateway'],
+  }.compact
+  details['ipv4'] = ipv4 unless ipv4.empty?
+
+  ipv6 = {
+    'method' => data['ipv6.method'],
+    'address' => split_profile_list(data['ipv6.addresses']),
+    'dns' => split_profile_list(data['ipv6.dns']),
+    'gateway' => data['ipv6.gateway'],
+  }.compact
+  details['ipv6'] = ipv6 unless ipv6.empty?
+
+  details.empty? ? nil : details
+rescue StandardError
+  nil
+end
+
+def split_profile_list(value)
+  return nil if value.nil? || value.strip.empty?
+
+  result = value.split(',').map(&:strip).reject(&:empty?)
+  result.empty? ? nil : result
 end

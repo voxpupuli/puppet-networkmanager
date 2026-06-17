@@ -34,13 +34,13 @@ describe :nm_active_connections, type: :fact do
   it 'handles string-keyed input from nm_all_connections' do
     allow(Facter).to receive(:value).with(:nm_all_connections).and_return(
       {
-        'foo' => { 'active' => true, 'state' => 'activated', 'uuid' => '123' },
+        'foo' => { 'active' => true, 'state' => 'activated', 'uuid' => '123', 'ipv4' => { 'dns' => ['8.8.8.8'] } },
       }
     )
 
     expect(fact.value).to eq(
       {
-        'foo' => { 'active' => true, 'state' => 'activated', 'uuid' => '123' },
+        'foo' => { 'active' => true, 'state' => 'activated', 'uuid' => '123', 'ipv4' => { 'dns' => ['8.8.8.8'] } },
       }
     )
   end

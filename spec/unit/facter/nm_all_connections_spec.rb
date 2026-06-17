@@ -69,4 +69,38 @@ describe :nm_all_connections, type: :fact do
 
     expect(fact.value).to be_nil
   end
+
+  it 'parses provider-settable profile fields' do
+    allow(Facter::Core::Execution).to receive(:execute)
+      .with('nmcli -t -f name,uuid,type,autoconnect,autoconnect-priority,readonly,dbus-path,active,device,state,active-path,filename con show')
+      .and_return("foo:123:ethernet:yes:0:no:/dbus/1:yes:eth0:activated:/active/1:/etc/foo.nmconnection\n")
+
+    allow(Facter::Core::Execution).to receive(:execute)
+      .with('nmcli -t connection show foo')
+      .and_return(<<~OUTPUT)
+        ipv4.method:auto
+        ipv4.addresses:192.168.1.10/24
+        ipv4.dns:8.8.8.8,1.1.1.1
+        ipv4.gateway:192.168.1.1
+        ipv6.method:ignore
+        ipv6.addresses:2001:db8::1/64
+        ipv6.dns:2001:4860:4860::8888,2001:4860:4860::8844
+        ipv6.gateway:fe80::1
+      OUTPUT
+
+    expect(fact.value['foo']).to include(
+      'ipv4' => {
+        'method' => 'auto',
+        'address' => ['192.168.1.10/24'],
+        'dns' => ['8.8.8.8', '1.1.1.1'],
+        'gateway' => '192.168.1.1',
+      },
+      'ipv6' => {
+        'method' => 'ignore',
+        'address' => ['2001:db8::1/64'],
+        'dns' => ['2001:4860:4860::8888', '2001:4860:4860::8844'],
+        'gateway' => 'fe80::1',
+      }
+    )
+  end
 end
