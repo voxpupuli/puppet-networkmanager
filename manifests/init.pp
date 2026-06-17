@@ -101,5 +101,6 @@ class networkmanager (
     ipv4_addresses => ['10.0.2.15/24', '1.2.3.4/24'],
     ipv4_dns       => ['8.8.8.8', '1.1.1.1'],
     ipv6_method    => 'disabled',
+    reapply        => true,
   }
 }
