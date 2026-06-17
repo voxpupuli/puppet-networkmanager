@@ -98,6 +98,31 @@ RSpec.describe Puppet::Provider::NetworkmanagerConnection::NetworkmanagerConnect
                                    },
                                  ])
     end
+
+    it 'keeps address order based on nmcli indexes' do
+      allow(provider).to receive(:nmcli).with('-t', 'connection', 'show', 'foo').and_return(
+        "IP4.ADDRESS[2]:192.168.1.11/24\nIP4.ADDRESS[1]:192.168.1.10/24\nIP4.DNS[2]:8.8.8.8\nIP4.DNS[1]:1.1.1.1\n"
+      )
+
+      expect(provider.get(context, 'foo')).to eq([
+                                   {
+                                     ensure: 'present',
+                                     name: 'foo',
+                                     type: nil,
+                                     device: nil,
+                                     ipv4_method: nil,
+                                     ipv4_addresses: ['192.168.1.10/24', '192.168.1.11/24'],
+                                     ipv4_dns: ['1.1.1.1', '8.8.8.8'],
+                                     ipv4_gateway: nil,
+                                     ipv6_method: nil,
+                                     ipv6_addresses: nil,
+                                     ipv6_dns: nil,
+                                     ipv6_gateway: nil,
+                                     general_state: 'unknown',
+                                     uuid: nil,
+                                   },
+                                 ])
+    end
   end
 
   describe '#set' do

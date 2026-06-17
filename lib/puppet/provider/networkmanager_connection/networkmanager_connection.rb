@@ -211,7 +211,10 @@ class Puppet::Provider::NetworkmanagerConnection::NetworkmanagerConnection < Pup
   #   ["192.168.1.100/24", "192.168.1.101/24"]
   #
   def extract_addresses(data, prefix)
-    addresses = data.select { |key, _| key.start_with?(prefix) }.values
+    addresses = data
+                .select { |key, _| key.start_with?(prefix) }
+                .sort_by { |key, _| key[/\[(\d+)\]\z/, 1].to_i }
+                .map { |_, value| value }
     addresses.empty? ? nil : addresses
   end
 
