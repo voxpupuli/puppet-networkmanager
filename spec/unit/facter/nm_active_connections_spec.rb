@@ -13,6 +13,7 @@ describe :nm_active_connections, type: :fact do
     allow(Facter).to receive(:value).and_call_original
     allow(Facter).to receive(:value).with(:kernel).and_return('Linux')
     allow(Facter.fact(:kernel)).to receive(:value).and_return('Linux')
+    allow(Facter::Core::Execution).to receive(:which).with('nmcli').and_return('/usr/bin/nmcli')
   end
 
   it 'returns only activated and active connections' do

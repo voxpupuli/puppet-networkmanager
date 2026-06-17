@@ -177,6 +177,53 @@ RSpec.describe Puppet::Provider::NetworkmanagerConnection::NetworkmanagerConnect
                    })
     end
 
+    it 'reapplies the device immediately when requested' do
+      expect(context).to receive(:notice).with("Updating 'office'")
+      expect(provider).to receive(:nmcli).with('connection', 'modify', 'office',
+                                               'connection.interface-name', 'enp0s8',
+                                               'ipv4.method', 'auto')
+      expect(provider).to receive(:nmcli).with('device', 'reapply', 'enp0s8')
+
+      provider.set(context, {
+                     'office' => {
+                       is: {
+                         name: 'office',
+                         ensure: 'present',
+                       },
+                       should: {
+                         name: 'office',
+                         ensure: 'present',
+                         device: 'enp0s8',
+                         ipv4_method: 'auto',
+                         reapply: true,
+                       },
+                     },
+                   })
+    end
+
+    it 'resolves the interface name for reapply when device is omitted' do
+      expect(context).to receive(:notice).with("Updating 'office'")
+      expect(provider).to receive(:nmcli).with('connection', 'modify', 'office',
+                                               'ipv4.method', 'auto')
+      expect(provider).to receive(:nmcli).with('-t', '-f', 'connection.interface-name', 'connection', 'show', 'office').and_return('connection.interface-name:enp0s8')
+      expect(provider).to receive(:nmcli).with('device', 'reapply', 'enp0s8')
+
+      provider.set(context, {
+                     'office' => {
+                       is: {
+                         name: 'office',
+                         ensure: 'present',
+                       },
+                       should: {
+                         name: 'office',
+                         ensure: 'present',
+                         ipv4_method: 'auto',
+                         reapply: true,
+                       },
+                     },
+                   })
+    end
+
     it 'deletes a connection when ensure is absent' do
       expect(context).to receive(:notice).with("Deleting 'old'")
       expect(provider).to receive(:nmcli).with('connection', 'delete', 'old')

@@ -95,10 +95,11 @@ class networkmanager (
 
   # vagrant-specific configuration for testing purposes
   networkmanager_connection { 'enp0s8':
-    ensure      => 'present',
-    type        => '802-3-ethernet',
-    ipv4_method => 'auto',
-    ipv4_dns    => ['8.8.8.8', '1.1.1.1'],
-    ipv6_method => 'disabled',
+    ensure         => 'present',
+    type           => '802-3-ethernet',
+    ipv4_method    => 'manual',
+    ipv4_addresses => ['10.0.2.15/24', '1.2.3.4/24'],
+    ipv4_dns       => ['8.8.8.8', '1.1.1.1'],
+    ipv6_method    => 'disabled',
   }
 }

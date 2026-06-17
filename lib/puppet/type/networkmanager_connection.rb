@@ -37,6 +37,12 @@ EOS
       desc:    'The network interface this connection applies to (optional).',
     },
 
+    reapply: {
+      type:    'Boolean',
+      desc:    'Whether to run an immediate runtime reapply on the device after profile changes.',
+      default: false,
+    },
+
     ipv4_method: {
       type:    'Enum[auto, manual, disabled, ignore]',
       desc:    'The IPv4 configuration method (e.g., auto, manual, disabled, ignore).',

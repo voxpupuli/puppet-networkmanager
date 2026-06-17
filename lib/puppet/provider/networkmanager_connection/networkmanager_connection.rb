@@ -52,10 +52,10 @@ class Puppet::Provider::NetworkmanagerConnection::NetworkmanagerConnection < Pup
         delete_connection(name)
       elsif is.empty? || is[:ensure] == 'absent'
         context.notice("Creating '#{name}'")
-        create_connection(name, should)
+        create_connection(context, name, should)
       else
         context.notice("Updating '#{name}'")
-        update_connection(name, should)
+        update_connection(context, name, should)
       end
     end
   rescue Puppet::ExecutionFailure => e
@@ -77,22 +77,22 @@ class Puppet::Provider::NetworkmanagerConnection::NetworkmanagerConnection < Pup
     ipv6_gateway: 'ipv6.gateway',
   }.freeze unless const_defined?(:PROPERTY_MAP, false)
 
-  def create_connection(name, resource)
+  def create_connection(context, name, resource)
     args = ['connection', 'add', 'con-name', name, 'type', resource.fetch(:type)]
     args += ['ifname', resource[:device]] if resource[:device]
     nmcli(*args)
-    apply_connection_settings(name, resource)
+    apply_connection_settings(context, name, resource)
   end
 
-  def update_connection(name, resource)
-    apply_connection_settings(name, resource)
+  def update_connection(context, name, resource)
+    apply_connection_settings(context, name, resource)
   end
 
   def delete_connection(name)
     nmcli('connection', 'delete', name)
   end
 
-  def apply_connection_settings(name, resource)
+  def apply_connection_settings(context, name, resource)
     modifications = []
 
     PROPERTY_MAP.each do |key, nmcli_key|
@@ -105,6 +105,27 @@ class Puppet::Provider::NetworkmanagerConnection::NetworkmanagerConnection < Pup
     return if modifications.empty?
 
     nmcli('connection', 'modify', name, *modifications)
+    maybe_reapply_connection(context, name, resource)
+  end
+
+  def maybe_reapply_connection(context, name, resource)
+    return unless resource[:reapply]
+
+    device = resolve_reapply_device(name, resource)
+    return if device.nil? || device.empty?
+
+    nmcli('device', 'reapply', device)
+  rescue Puppet::ExecutionFailure => e
+    context.debug("Failed to reapply device '#{device}' for connection '#{name}': #{e}") if context
+  end
+
+  def resolve_reapply_device(name, resource)
+    return resource[:device] if resource[:device] && !resource[:device].empty?
+
+    output = nmcli('-t', '-f', 'connection.interface-name', 'connection', 'show', name).to_s.strip
+    return nil if output.empty?
+
+    output.split(':', 2).last.to_s.strip
   end
 
   def normalize_setting_value(value)
