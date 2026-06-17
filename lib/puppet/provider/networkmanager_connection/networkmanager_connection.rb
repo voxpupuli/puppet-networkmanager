@@ -43,10 +43,9 @@ class Puppet::Provider::NetworkmanagerConnection::NetworkmanagerConnection < Pup
   end
 
   def set(context, changes)
-    changes.each do |change|
+    changes.each do |name, change|
       is = change[:is] || {}
       should = change[:should] || {}
-      name = should[:name] || is[:name]
 
       if should[:ensure] == 'absent'
         context.notice("Deleting '#{name}'")
@@ -114,6 +113,15 @@ class Puppet::Provider::NetworkmanagerConnection::NetworkmanagerConnection < Pup
     value.is_a?(Array) ? value.join(',') : value.to_s
   end
 
+  # Splits a comma-separated profile value (e.g. "8.8.8.8,1.1.1.1") into an Array.
+  # Returns nil when the value is absent or empty.
+  def split_profile_list(value)
+    return nil if value.nil? || value.strip.empty?
+
+    result = value.split(',').map(&:strip).reject(&:empty?)
+    result.empty? ? nil : result
+  end
+
   def normalize_general_state(value)
     return 'unknown' if value.nil? || value.strip.empty?
 
@@ -176,13 +184,13 @@ class Puppet::Provider::NetworkmanagerConnection::NetworkmanagerConnection < Pup
       type: data['connection.type'],
       device: data['connection.interface-name'],
       ipv4_method: data['ipv4.method'],
-      ipv4_addresses: extract_addresses(data, 'IP4.ADDRESS'),
-      ipv4_dns: extract_addresses(data, 'IP4.DNS'),
-      ipv4_gateway: data['IP4.GATEWAY'],
+      ipv4_addresses: split_profile_list(data['ipv4.addresses']),
+      ipv4_dns: split_profile_list(data['ipv4.dns']),
+      ipv4_gateway: data['ipv4.gateway'],
       ipv6_method: data['ipv6.method'],
-      ipv6_addresses: extract_addresses(data, 'IP6.ADDRESS'),
-      ipv6_dns: extract_addresses(data, 'IP6.DNS'),
-      ipv6_gateway: data['IP6.GATEWAY'],
+      ipv6_addresses: split_profile_list(data['ipv6.addresses']),
+      ipv6_dns: split_profile_list(data['ipv6.dns']),
+      ipv6_gateway: data['ipv6.gateway'],
       general_state: normalize_general_state(data['GENERAL.STATE']),
       uuid: data['connection.uuid'],
     }

@@ -99,9 +99,9 @@ RSpec.describe Puppet::Provider::NetworkmanagerConnection::NetworkmanagerConnect
                                  ])
     end
 
-    it 'keeps address order based on nmcli indexes' do
+    it 'reads addresses and dns from connection profile fields' do
       allow(provider).to receive(:nmcli).with('-t', 'connection', 'show', 'foo').and_return(
-        "IP4.ADDRESS[2]:192.168.1.11/24\nIP4.ADDRESS[1]:192.168.1.10/24\nIP4.DNS[2]:8.8.8.8\nIP4.DNS[1]:1.1.1.1\n"
+        "ipv4.addresses:192.168.1.10/24,192.168.1.11/24\nipv4.dns:1.1.1.1,8.8.8.8\n"
       )
 
       expect(provider.get(context, 'foo')).to eq([
@@ -141,8 +141,8 @@ RSpec.describe Puppet::Provider::NetworkmanagerConnection::NetworkmanagerConnect
                                                'connection.interface-name', 'wlan0',
                                                'ipv4.method', 'auto')
 
-      provider.set(context, [
-                     {
+      provider.set(context, {
+                     'home' => {
                        is: {},
                        should: {
                          name: 'home',
@@ -152,7 +152,7 @@ RSpec.describe Puppet::Provider::NetworkmanagerConnection::NetworkmanagerConnect
                          ipv4_method: 'auto',
                        },
                      },
-                   ])
+                   })
     end
 
     it 'updates a connection when resource exists' do
@@ -161,8 +161,8 @@ RSpec.describe Puppet::Provider::NetworkmanagerConnection::NetworkmanagerConnect
                                                'ipv4.addresses', '10.0.0.10/24,10.0.0.11/24',
                                                'ipv4.dns', '1.1.1.1,8.8.8.8')
 
-      provider.set(context, [
-                     {
+      provider.set(context, {
+                     'office' => {
                        is: {
                          name: 'office',
                          ensure: 'present',
@@ -174,15 +174,15 @@ RSpec.describe Puppet::Provider::NetworkmanagerConnection::NetworkmanagerConnect
                          ipv4_dns: ['1.1.1.1', '8.8.8.8'],
                        },
                      },
-                   ])
+                   })
     end
 
     it 'deletes a connection when ensure is absent' do
       expect(context).to receive(:notice).with("Deleting 'old'")
       expect(provider).to receive(:nmcli).with('connection', 'delete', 'old')
 
-      provider.set(context, [
-                     {
+      provider.set(context, {
+                     'old' => {
                        is: {
                          name: 'old',
                          ensure: 'present',
@@ -192,7 +192,7 @@ RSpec.describe Puppet::Provider::NetworkmanagerConnection::NetworkmanagerConnect
                          ensure: 'absent',
                        },
                      },
-                   ])
+                   })
     end
   end
 end
