@@ -15,13 +15,23 @@ class Puppet::Provider::NetworkmanagerConnection::NetworkmanagerConnection < Pup
   # @return [Array<Hash>] An array of hashes representing the current state of connections.
   #
   def get(context, name)
-    context.debug("Fetching NetworkManager connections for name: #{name.inspect}")
+    requested_names = case name
+                      when nil
+                        []
+                      when Array
+                        name
+                      else
+                        [name]
+                      end
 
-    # Fetch all connections if no specific name is provided, otherwise fetch the specific connection.
-    connections = if name.empty?
+    requested_names = requested_names.flatten.compact.map(&:to_s).reject(&:empty?)
+    context.debug("Fetching NetworkManager connections for names: #{requested_names.inspect}")
+
+    # Fetch all connections if no specific names are provided, otherwise fetch each requested connection.
+    connections = if requested_names.empty?
                     list_connections.map { |connection| fetch_connection_data(connection) }
                   else
-                    [fetch_connection_data(name)]
+                    requested_names.map { |connection| fetch_connection_data(connection) }
                   end
 
     # Remove any nil entries (e.g., if a connection fetch failed).
