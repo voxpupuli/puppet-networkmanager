@@ -21,11 +21,11 @@
 #
 class networkmanager::config (
   Hash $options = {},
-  Boolean $manage_nm_config = $networkmanager::manage_nm_config,
-  String[1] $config_file = $networkmanager::config_file,
-  String $config_file_mode = $networkmanager::config_file_mode,
-  String $config_file_owner = $networkmanager::config_file_owner,
-  String $config_file_group = $networkmanager::config_file_group,
+  Boolean $manage_nm_config = false,
+  String[1] $config_file = '/etc/NetworkManager/NetworkManager.conf',
+  String $config_file_mode = '0644',
+  String $config_file_owner = 'root',
+  String $config_file_group = 'root',
 ) {
   if $manage_nm_config {
     file { $config_file:

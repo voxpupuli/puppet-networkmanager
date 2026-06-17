@@ -12,9 +12,9 @@
 #   The version of the NetworkManager package.
 #
 class networkmanager::install (
-  Boolean $manage_nm_package = $networkmanager::manage_nm_package,
-  String[1] $package_name    = $networkmanager::package_name,
-  String[1] $package_version = $networkmanager::package_version,
+  Boolean $manage_nm_package = true,
+  String[1] $package_name    = 'NetworkManager',
+  String[1] $package_version = 'installed',
 ) {
   if $manage_nm_package {
     package { $package_name:

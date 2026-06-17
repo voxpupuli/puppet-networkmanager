@@ -79,15 +79,15 @@ class networkmanager (
 
   String[1] $service_name = 'NetworkManager',
   String[1] $service_ensure = 'running',
-  String[1] $service_enable = true,
+  Boolean $service_enable = true,
 
   String[1] $service_wait_online_name = "${service_name}-wait-online.service",
   String[1] $service_wait_online_ensure = 'running',
-  String[1] $service_wait_online_enable = true,
+  Boolean $service_wait_online_enable = true,
 
   String[1] $service_dispatcher_name = "${service_name}-dispatcher.service",
   String[1] $service_dispatcher_ensure = 'stopped',
-  String[1] $service_dispatcher_enable = true,
+  Boolean $service_dispatcher_enable = true,
 ) {
   include networkmanager::install
   include networkmanager::config

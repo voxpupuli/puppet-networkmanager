@@ -39,21 +39,21 @@
 #   Whether to enable the NetworkManager-dispatcher service at boot.
 #
 class networkmanager::service (
-  Boolean $manage_nm_service     = $networkmanager::manage_nm_service,
-  Boolean $manage_nm_service_wait_online = $networkmanager::manage_nm_service_wait_online,
-  Boolean $manage_nm_service_dispatcher  = $networkmanager::manage_nm_service_dispatcher,
+  Boolean $manage_nm_service = true,
+  Boolean $manage_nm_service_wait_online = false,
+  Boolean $manage_nm_service_dispatcher = false,
 
-  String[1] $service_name = $networkmanager::service_name,
-  String[1] $service_ensure = $networkmanager::service_ensure,
-  String[1] $service_enable = $networkmanager::service_enable,
+  String[1] $service_name = 'NetworkManager',
+  String[1] $service_ensure = 'running',
+  Boolean $service_enable = true,
 
-  String[1] $service_wait_online_name = $networkmanager::service_wait_online_name,
-  String[1] $service_wait_online_ensure = $networkmanager::service_wait_online_ensure,
-  String[1] $service_wait_online_enable = $networkmanager::service_wait_online_enable,
+  String[1] $service_wait_online_name = 'NetworkManager-wait-online.service',
+  String[1] $service_wait_online_ensure = 'running',
+  Boolean $service_wait_online_enable = true,
 
-  String[1] $service_dispatcher_name = $networkmanager::service_dispatcher_name,
-  String[1] $service_dispatcher_ensure = $networkmanager::service_dispatcher_ensure,
-  String[1] $service_dispatcher_enable = $networkmanager::service_dispatcher_enable,
+  String[1] $service_dispatcher_name = 'NetworkManager-dispatcher.service',
+  String[1] $service_dispatcher_ensure = 'stopped',
+  Boolean $service_dispatcher_enable = true,
 ) {
   if $manage_nm_service_wait_online {
     service { $service_wait_online_name:
