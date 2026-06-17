@@ -18,7 +18,7 @@ describe :nm_network_connectivity, type: :fact do
   it 'returns nmcli connectivity status' do
     allow(Facter::Core::Execution).to receive(:execute)
       .with('nmcli -c no network connectivity check')
-      .and_return('full')
+      .and_return("full\n")
 
     expect(fact.value).to eq('full')
   end

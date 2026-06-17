@@ -10,6 +10,6 @@ Facter.add(:nm_version) do
   confine { Facter::Core::Execution.which('NetworkManager') }
 
   setcode do
-    Facter::Util::Resolution.exec("NetworkManager --version")
+    Facter::Util::Resolution.exec("NetworkManager --version").strip
   end
 end

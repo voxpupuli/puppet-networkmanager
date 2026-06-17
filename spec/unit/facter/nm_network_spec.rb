@@ -18,7 +18,7 @@ describe :nm_network, type: :fact do
   it 'returns nmcli network status' do
     allow(Facter::Core::Execution).to receive(:execute)
       .with('nmcli -c no network')
-      .and_return('enabled')
+      .and_return("enabled\n")
 
     expect(fact.value).to eq('enabled')
   end

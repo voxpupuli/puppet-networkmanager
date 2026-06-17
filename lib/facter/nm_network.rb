@@ -10,6 +10,6 @@ Facter.add(:nm_network) do
   confine { Facter::Core::Execution.which('nmcli') }
 
   setcode do
-    Facter::Core::Execution.execute('nmcli -c no network')
+    Facter::Core::Execution.execute('nmcli -c no network').strip
   end
 end

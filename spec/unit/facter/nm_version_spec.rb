@@ -19,7 +19,7 @@ describe :nm_version, type: :fact do
   it 'returns NetworkManager version' do
     allow(Facter::Util::Resolution).to receive(:exec)
       .with('NetworkManager --version')
-      .and_return('1.51.6-1.el9')
+      .and_return("1.51.6-1.el9\n")
 
     expect(fact.value).to eq('1.51.6-1.el9')
   end
