@@ -30,4 +30,10 @@ describe :nm_active_connections, type: :fact do
       }
     )
   end
+
+  it 'returns nil when nm_all_connections fails' do
+    allow(Facter).to receive(:value).with(:nm_all_connections).and_return(nil)
+
+    expect(fact.value).to be_nil
+  end
 end

@@ -22,4 +22,11 @@ describe :nm_network, type: :fact do
 
     expect(fact.value).to eq('enabled')
   end
+
+  it 'returns nil when nmcli fails' do
+    allow(Facter::Core::Execution).to receive(:execute)
+      .and_raise(Puppet::ExecutionFailure, 'nmcli failed')
+
+    expect(fact.value).to be_nil
+  end
 end

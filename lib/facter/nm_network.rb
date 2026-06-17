@@ -11,5 +11,7 @@ Facter.add(:nm_network) do
 
   setcode do
     Facter::Core::Execution.execute('nmcli -c no network').strip
+  rescue StandardError
+    nil
   end
 end

@@ -11,5 +11,7 @@ Facter.add(:nm_version) do
 
   setcode do
     Facter::Util::Resolution.exec("NetworkManager --version").strip
+  rescue StandardError
+    nil
   end
 end

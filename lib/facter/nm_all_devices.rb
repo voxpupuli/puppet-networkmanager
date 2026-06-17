@@ -20,25 +20,29 @@ Facter.add(:nm_all_devices) do
   confine { Facter::Core::Execution.which('nmcli') }
 
   setcode do
-    nmcli_output = Facter::Core::Execution.execute('nmcli -t -e yes -c no -f device,type,state,ip4-connectivity,ip6-connectivity,dbus-path,connection,con-uuid,con-path device')
-    devices = {}
+    begin
+      devices = {}
+      nmcli_output = Facter::Core::Execution.execute('nmcli -t -e yes -c no -f device,type,state,ip4-connectivity,ip6-connectivity,dbus-path,connection,con-uuid,con-path device')
 
-    nmcli_output.each_line do |line|
-      next if line.strip.empty?
+      nmcli_output.each_line do |line|
+        next if line.strip.empty?
 
-      device, type, state, ip4_connectivity, ip6_connectivity, dbus_path, connection, con_uuid, con_path = line.strip.split(':', 9)
+        device, type, state, ip4_connectivity, ip6_connectivity, dbus_path, connection, con_uuid, con_path = line.strip.split(':', 9)
 
-      devices[device] = {}
-      devices[device]['type'] = type unless type.empty?
-      devices[device]['state'] = state unless state.empty?
-      devices[device]['ip4_connectivity'] = ip4_connectivity unless ip4_connectivity.empty?
-      devices[device]['ip6_connectivity'] = ip6_connectivity unless ip6_connectivity.empty?
-      devices[device]['dbus_path'] = dbus_path unless dbus_path.empty?
-      devices[device]['connection'] = connection unless connection.empty?
-      devices[device]['con_uuid'] = con_uuid unless con_uuid.empty?
-      devices[device]['con_path'] = con_path unless con_path.empty?
+        devices[device] = {}
+        devices[device]['type'] = type unless type.empty?
+        devices[device]['state'] = state unless state.empty?
+        devices[device]['ip4_connectivity'] = ip4_connectivity unless ip4_connectivity.empty?
+        devices[device]['ip6_connectivity'] = ip6_connectivity unless ip6_connectivity.empty?
+        devices[device]['dbus_path'] = dbus_path unless dbus_path.empty?
+        devices[device]['connection'] = connection unless connection.empty?
+        devices[device]['con_uuid'] = con_uuid unless con_uuid.empty?
+        devices[device]['con_path'] = con_path unless con_path.empty?
+      end
+
+      devices
+    rescue StandardError
+      nil
     end
-
-    devices
   end
 end

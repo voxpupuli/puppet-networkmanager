@@ -46,4 +46,11 @@ describe :nm_all_connections, type: :fact do
 
     expect(fact.value['foo']['filename']).to eq('/etc/foo:profile.nmconnection')
   end
+
+  it 'returns an empty hash when nmcli fails' do
+    allow(Facter::Core::Execution).to receive(:execute)
+      .and_raise(Puppet::ExecutionFailure, 'nmcli failed')
+
+    expect(fact.value).to be_nil
+  end
 end

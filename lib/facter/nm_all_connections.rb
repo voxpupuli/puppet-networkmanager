@@ -23,28 +23,32 @@ Facter.add(:nm_all_connections) do
   confine { Facter::Core::Execution.which('nmcli') }
 
   setcode do
-    nmcli_output = Facter::Core::Execution.execute('nmcli -t -f name,uuid,type,autoconnect,autoconnect-priority,readonly,dbus-path,active,device,state,active-path,filename con show')
-    connections = {}
+    begin
+      connections = {}
+      nmcli_output = Facter::Core::Execution.execute('nmcli -t -f name,uuid,type,autoconnect,autoconnect-priority,readonly,dbus-path,active,device,state,active-path,filename con show')
 
-    nmcli_output.each_line do |line|
-      next if line.strip.empty?
+      nmcli_output.each_line do |line|
+        next if line.strip.empty?
 
-      name,uuid,type,autoconnect,autoconnect_priority,readonly,dbus_path,active,device,state,active_path,filename = line.strip.split(':', 12)
+        name,uuid,type,autoconnect,autoconnect_priority,readonly,dbus_path,active,device,state,active_path,filename = line.strip.split(':', 12)
 
-      connections[name] = {}
-      connections[name]['uuid'] = uuid unless uuid.empty?
-      connections[name]['type'] = type unless type.empty?
-      connections[name]['autoconnect'] = autoconnect == 'yes' unless autoconnect.empty?
-      connections[name]['autoconnect_priority'] = autoconnect_priority unless autoconnect_priority.empty?
-      connections[name]['readonly'] = readonly == 'yes' unless readonly.empty?
-      connections[name]['dbus_path'] = dbus_path unless dbus_path.empty?
-      connections[name]['active'] = active == 'yes' unless active.empty?
-      connections[name]['device'] = device unless device.empty?
-      connections[name]['state'] = state unless state.empty?
-      connections[name]['active_path'] = active_path unless active_path.empty?
-      connections[name]['filename'] = filename unless filename.empty?
+        connections[name] = {}
+        connections[name]['uuid'] = uuid unless uuid.empty?
+        connections[name]['type'] = type unless type.empty?
+        connections[name]['autoconnect'] = autoconnect == 'yes' unless autoconnect.empty?
+        connections[name]['autoconnect_priority'] = autoconnect_priority unless autoconnect_priority.empty?
+        connections[name]['readonly'] = readonly == 'yes' unless readonly.empty?
+        connections[name]['dbus_path'] = dbus_path unless dbus_path.empty?
+        connections[name]['active'] = active == 'yes' unless active.empty?
+        connections[name]['device'] = device unless device.empty?
+        connections[name]['state'] = state unless state.empty?
+        connections[name]['active_path'] = active_path unless active_path.empty?
+        connections[name]['filename'] = filename unless filename.empty?
+      end
+
+      connections
+    rescue StandardError
+      nil
     end
-
-    connections
   end
 end

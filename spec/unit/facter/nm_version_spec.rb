@@ -23,4 +23,11 @@ describe :nm_version, type: :fact do
 
     expect(fact.value).to eq('1.51.6-1.el9')
   end
+
+  it 'returns nil when NetworkManager fails' do
+    allow(Facter::Util::Resolution).to receive(:exec)
+      .and_raise(Puppet::ExecutionFailure, 'NetworkManager failed')
+
+    expect(fact.value).to be_nil
+  end
 end
