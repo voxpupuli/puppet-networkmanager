@@ -114,6 +114,22 @@ class Puppet::Provider::NetworkmanagerConnection::NetworkmanagerConnection < Pup
     value.is_a?(Array) ? value.join(',') : value.to_s
   end
 
+  def normalize_general_state(value)
+    return 'unknown' if value.nil? || value.strip.empty?
+
+    normalized = value.downcase.strip
+    normalized = normalized[/\(([^)]+)\)/, 1] || normalized
+
+    case normalized
+    when 'activated', 'unknown', 'down', 'connecting', 'connected', 'disconnecting'
+      normalized
+    when 'activating', 'deactivating'
+      'connecting'
+    else
+      'unknown'
+    end
+  end
+
   # Lists all available NetworkManager connections by name.
   # This method executes the `nmcli connection show` command.
   #
@@ -167,7 +183,7 @@ class Puppet::Provider::NetworkmanagerConnection::NetworkmanagerConnection < Pup
       ipv6_addresses: extract_addresses(data, 'IP6.ADDRESS'),
       ipv6_dns: extract_addresses(data, 'IP6.DNS'),
       ipv6_gateway: data['IP6.GATEWAY'],
-      general_state: (data['GENERAL.STATE'] || 'unknown').downcase,
+      general_state: normalize_general_state(data['GENERAL.STATE']),
       uuid: data['connection.uuid'],
     }
   rescue Puppet::ExecutionFailure

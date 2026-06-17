@@ -66,6 +66,31 @@ RSpec.describe Puppet::Provider::NetworkmanagerConnection::NetworkmanagerConnect
 
       expect(provider.get(context, nil)).to eq([])
     end
+
+    it 'normalizes general state values into the type enum' do
+      allow(provider).to receive(:nmcli).with('-t', 'connection', 'show', 'foo').and_return(
+        "GENERAL.STATE:100 (connected)\nconnection.type:wifi\nconnection.uuid:123\n"
+      )
+
+      expect(provider.get(context, 'foo')).to eq([
+                                   {
+                                     ensure: 'present',
+                                     name: 'foo',
+                                     type: 'wifi',
+                                     device: nil,
+                                     ipv4_method: nil,
+                                     ipv4_addresses: nil,
+                                     ipv4_dns: nil,
+                                     ipv4_gateway: nil,
+                                     ipv6_method: nil,
+                                     ipv6_addresses: nil,
+                                     ipv6_dns: nil,
+                                     ipv6_gateway: nil,
+                                     general_state: 'connected',
+                                     uuid: '123',
+                                   },
+                                 ])
+    end
   end
 
   describe '#set' do
