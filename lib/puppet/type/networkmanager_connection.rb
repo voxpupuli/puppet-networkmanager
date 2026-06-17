@@ -64,6 +64,11 @@ EOS
       desc:    'The IPv4 gateway address (e.g., "192.168.0.1").',
     },
 
+    ipv4_routes: {
+      type:    'Optional[Array[Struct[{destination => Pattern[/\\A\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\/\\d{1,2}\\z/], Optional[next_hop] => Pattern[/\\A\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\z/], Optional[metric] => Integer[0]}]]]',
+      desc:    'An array of IPv4 routes, each with destination, optional next_hop and optional metric.',
+    },
+
     ipv6_method: {
       type:    'Enum[auto, manual, disabled, ignore]',
       desc:    'The IPv6 configuration method (e.g., auto, manual, disabled, ignore).',
@@ -83,6 +88,11 @@ EOS
     ipv6_gateway: {
       type:    'Optional[String[1]]',
       desc:    'The IPv6 gateway address (e.g., "2001:db8::1").',
+    },
+
+    ipv6_routes: {
+      type:    'Optional[Array[Struct[{destination => String[1], Optional[next_hop] => String[1], Optional[metric] => Integer[0]}]]]',
+      desc:    'An array of IPv6 routes, each with destination, optional next_hop and optional metric.',
     },
 
     general_state: {

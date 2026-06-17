@@ -89,10 +89,12 @@ RSpec.describe Puppet::Provider::NetworkmanagerConnection::NetworkmanagerConnect
                                      ipv4_addresses: nil,
                                      ipv4_dns: nil,
                                      ipv4_gateway: nil,
+                                     ipv4_routes: nil,
                                      ipv6_method: nil,
                                      ipv6_addresses: nil,
                                      ipv6_dns: nil,
                                      ipv6_gateway: nil,
+                                     ipv6_routes: nil,
                                      general_state: 'connected',
                                    },
                                  ])
@@ -113,10 +115,43 @@ RSpec.describe Puppet::Provider::NetworkmanagerConnection::NetworkmanagerConnect
                                      ipv4_addresses: ['192.168.1.10/24', '192.168.1.11/24'],
                                      ipv4_dns: ['1.1.1.1', '8.8.8.8'],
                                      ipv4_gateway: nil,
+                                     ipv4_routes: nil,
                                      ipv6_method: nil,
                                      ipv6_addresses: nil,
                                      ipv6_dns: nil,
                                      ipv6_gateway: nil,
+                                     ipv6_routes: nil,
+                                     general_state: 'unknown',
+                                   },
+                                 ])
+    end
+
+    it 'reads routes from connection profile fields' do
+      allow(provider).to receive(:nmcli).with('-t', 'connection', 'show', 'foo').and_return(
+        "ipv4.routes:10.10.0.0/16 10.0.2.1 100,10.20.0.0/16 10.0.2.1 200\nipv6.routes:2001:db8:10::/64 2001:db8::1 100\n"
+      )
+
+      expect(provider.get(context, 'foo')).to eq([
+                                   {
+                                     ensure: 'present',
+                                     name: 'foo',
+                                     type: nil,
+                                     device: nil,
+                                     ipv4_method: nil,
+                                     ipv4_addresses: nil,
+                                     ipv4_dns: nil,
+                                     ipv4_gateway: nil,
+                                     ipv4_routes: [
+                                       { destination: '10.10.0.0/16', next_hop: '10.0.2.1', metric: 100 },
+                                       { destination: '10.20.0.0/16', next_hop: '10.0.2.1', metric: 200 },
+                                     ],
+                                     ipv6_method: nil,
+                                     ipv6_addresses: nil,
+                                     ipv6_dns: nil,
+                                     ipv6_gateway: nil,
+                                     ipv6_routes: [
+                                       { destination: '2001:db8:10::/64', next_hop: '2001:db8::1', metric: 100 },
+                                     ],
                                      general_state: 'unknown',
                                    },
                                  ])
@@ -170,6 +205,32 @@ RSpec.describe Puppet::Provider::NetworkmanagerConnection::NetworkmanagerConnect
                          ensure: 'present',
                          ipv4_addresses: ['10.0.0.10/24', '10.0.0.11/24'],
                          ipv4_dns: ['1.1.1.1', '8.8.8.8'],
+                       },
+                     },
+                   })
+    end
+
+    it 'updates a connection when routes are provided' do
+      expect(context).to receive(:notice).with("Updating 'office'")
+      expect(provider).to receive(:nmcli).with('connection', 'modify', 'office',
+                                               'ipv4.routes', '10.10.0.0/16 10.0.2.1 100',
+                                               'ipv6.routes', '2001:db8:10::/64 2001:db8::1 100')
+
+      provider.set(context, {
+                     'office' => {
+                       is: {
+                         name: 'office',
+                         ensure: 'present',
+                       },
+                       should: {
+                         name: 'office',
+                         ensure: 'present',
+                         ipv4_routes: [
+                           { destination: '10.10.0.0/16', next_hop: '10.0.2.1', metric: 100 },
+                         ],
+                         ipv6_routes: [
+                           { destination: '2001:db8:10::/64', next_hop: '2001:db8::1', metric: 100 },
+                         ],
                        },
                      },
                    })

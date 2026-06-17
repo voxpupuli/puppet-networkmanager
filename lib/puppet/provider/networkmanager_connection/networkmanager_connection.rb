@@ -71,10 +71,12 @@ class Puppet::Provider::NetworkmanagerConnection::NetworkmanagerConnection < Pup
     ipv4_addresses: 'ipv4.addresses',
     ipv4_dns: 'ipv4.dns',
     ipv4_gateway: 'ipv4.gateway',
+    ipv4_routes: 'ipv4.routes',
     ipv6_method: 'ipv6.method',
     ipv6_addresses: 'ipv6.addresses',
     ipv6_dns: 'ipv6.dns',
     ipv6_gateway: 'ipv6.gateway',
+    ipv6_routes: 'ipv6.routes',
   }.freeze unless const_defined?(:PROPERTY_MAP, false)
 
   def create_connection(context, name, resource)
@@ -131,7 +133,24 @@ class Puppet::Provider::NetworkmanagerConnection::NetworkmanagerConnection < Pup
   def normalize_setting_value(value)
     return '' if value.nil?
 
+    if value.is_a?(Array) && value.first.is_a?(Hash)
+      return value.map { |entry| format_route_entry(entry) }.compact.join(',')
+    end
+
     value.is_a?(Array) ? value.join(',') : value.to_s
+  end
+
+  def format_route_entry(entry)
+    destination = entry[:destination] || entry['destination']
+    return nil if destination.nil? || destination.to_s.strip.empty?
+
+    next_hop = entry[:next_hop] || entry['next_hop']
+    metric = entry[:metric] || entry['metric']
+
+    parts = [destination.to_s.strip]
+    parts << next_hop.to_s.strip if next_hop && !next_hop.to_s.strip.empty?
+    parts << metric.to_s.strip if metric && !metric.to_s.strip.empty?
+    parts.join(' ')
   end
 
   # Splits a comma-separated profile value (e.g. "8.8.8.8,1.1.1.1") into an Array.
@@ -141,6 +160,25 @@ class Puppet::Provider::NetworkmanagerConnection::NetworkmanagerConnection < Pup
 
     result = value.split(',').map(&:strip).reject(&:empty?)
     result.empty? ? nil : result
+  end
+
+  def parse_routes(value)
+    return nil if value.nil? || value.strip.empty?
+
+    routes = value.split(',').map(&:strip).reject(&:empty?).map { |route| parse_route_entry(route) }.compact
+    routes.empty? ? nil : routes
+  end
+
+  def parse_route_entry(route)
+    parts = route.split(/\s+/)
+    return nil if parts.empty?
+
+    parsed = { destination: parts[0] }
+    parsed[:next_hop] = parts[1] if parts[1] && !parts[1].empty?
+    parsed[:metric] = Integer(parts[2], 10) if parts[2] && !parts[2].empty?
+    parsed
+  rescue ArgumentError
+    parsed
   end
 
   def normalize_general_state(value)
@@ -207,10 +245,12 @@ class Puppet::Provider::NetworkmanagerConnection::NetworkmanagerConnection < Pup
       ipv4_addresses: split_profile_list(data['ipv4.addresses']),
       ipv4_dns: split_profile_list(data['ipv4.dns']),
       ipv4_gateway: data['ipv4.gateway'],
+      ipv4_routes: parse_routes(data['ipv4.routes']),
       ipv6_method: data['ipv6.method'],
       ipv6_addresses: split_profile_list(data['ipv6.addresses']),
       ipv6_dns: split_profile_list(data['ipv6.dns']),
       ipv6_gateway: data['ipv6.gateway'],
+      ipv6_routes: parse_routes(data['ipv6.routes']),
       general_state: normalize_general_state(data['GENERAL.STATE']),
     }
   rescue Puppet::ExecutionFailure => e
