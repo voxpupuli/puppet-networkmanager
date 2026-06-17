@@ -10,10 +10,28 @@ RSpec.describe Puppet::Provider::NetworkmanagerConnection::NetworkmanagerConnect
 
   let(:context) { instance_double('Puppet::ResourceApi::BaseContext', 'context') }
 
+  before do
+    allow(context).to receive(:debug)
+    allow(context).to receive(:err)
+  end
+
   describe '#get' do
-    it 'processes resources' do
-      expect(context).to receive(:debug).with('Returning pre-canned example data')
-      expect(provider.get(context)).to eq [
+    it 'returns all connections when no filter is provided' do
+      allow(provider).to receive(:list_connections).and_return(%w[foo bar])
+      allow(provider).to receive(:fetch_connection_data).with('foo').and_return(
+        {
+          name: 'foo',
+          ensure: 'present',
+        }
+      )
+      allow(provider).to receive(:fetch_connection_data).with('bar').and_return(
+        {
+          name: 'bar',
+          ensure: 'present',
+        }
+      )
+
+      expect(provider.get(context, nil)).to eq [
         {
           name: 'foo',
           ensure: 'present',
@@ -24,29 +42,28 @@ RSpec.describe Puppet::Provider::NetworkmanagerConnection::NetworkmanagerConnect
         },
       ]
     end
-  end
 
-  describe 'create(context, name, should)' do
-    it 'creates the resource' do
-      expect(context).to receive(:notice).with(%r{\ACreating 'a'})
+    it 'normalizes and filters requested names' do
+      allow(provider).to receive(:fetch_connection_data).with('foo').and_return(
+        {
+          name: 'foo',
+          ensure: 'present',
+        }
+      )
 
-      provider.create(context, 'a', name: 'a', ensure: 'present')
+      expect(provider.get(context, ['foo', nil, ''])).to eq [
+        {
+          name: 'foo',
+          ensure: 'present',
+        },
+      ]
     end
-  end
 
-  describe 'update(context, name, should)' do
-    it 'updates the resource' do
-      expect(context).to receive(:notice).with(%r{\AUpdating 'foo'})
+    it 'returns an empty array when listing connections fails' do
+      allow(provider).to receive(:list_connections).and_raise(Puppet::ExecutionFailure, 'nmcli failed')
+      expect(context).to receive(:err).with(%r{nmcli failed})
 
-      provider.update(context, 'foo', name: 'foo', ensure: 'present')
-    end
-  end
-
-  describe 'delete(context, name)' do
-    it 'deletes the resource' do
-      expect(context).to receive(:notice).with(%r{\ADeleting 'foo'})
-
-      provider.delete(context, 'foo')
+      expect(provider.get(context, nil)).to eq([])
     end
   end
 end

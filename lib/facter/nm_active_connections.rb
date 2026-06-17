@@ -23,7 +23,9 @@ Facter.add(:nm_active_connections) do
 
   setcode do
     Facter.value(:nm_all_connections).select do |_, connection|
-      connection['active'] && connection['state'] == 'activated'
+      active = connection[:active] || connection['active']
+      state = connection[:state] || connection['state']
+      active && state == 'activated'
     end
   end
 end
