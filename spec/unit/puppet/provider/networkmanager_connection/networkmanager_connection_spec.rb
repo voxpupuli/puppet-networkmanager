@@ -125,6 +125,14 @@ RSpec.describe Puppet::Provider::NetworkmanagerConnection::NetworkmanagerConnect
     end
   end
 
+  describe '#list_connections' do
+    it 'filters blank entries from nmcli output' do
+      allow(provider).to receive(:nmcli).with('-t', '-f', 'name', 'connection', 'show').and_return("foo\n\n bar \n\n")
+
+      expect(provider.send(:list_connections)).to eq(%w[foo bar])
+    end
+  end
+
   describe '#set' do
     it 'creates a connection when resource is absent' do
       expect(context).to receive(:notice).with("Creating 'home'")

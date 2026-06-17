@@ -141,7 +141,7 @@ class Puppet::Provider::NetworkmanagerConnection::NetworkmanagerConnection < Pup
   #   ["Wired connection 1", "Home WiFi", "VPN Connection"]
   #
   def list_connections
-    nmcli('-t', '-f', 'name', 'connection', 'show').split("\n").map(&:strip)
+    nmcli('-t', '-f', 'name', 'connection', 'show').split("\n").map(&:strip).reject(&:empty?)
   end
 
   # Fetches detailed information about a specific NetworkManager connection.
