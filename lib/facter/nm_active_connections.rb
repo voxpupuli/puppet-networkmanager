@@ -20,6 +20,7 @@
 #
 Facter.add(:nm_active_connections) do
   confine kernel: 'Linux'
+  confine { Facter::Core::Execution.which('nmcli') }
 
   setcode do
     connections = Facter.value(:nm_all_connections)
