@@ -38,8 +38,9 @@ EOS
     },
 
     ipv4_method: {
-      type:    'Enum[auto, manual, disabled]',
-      desc:    'The IPv4 configuration method (e.g., auto, manual, disabled).',
+      type:    'Enum[auto, manual, disabled, ignore]',
+      desc:    'The IPv4 configuration method (e.g., auto, manual, disabled, ignore).',
+      default: 'auto',
     },
 
     ipv4_addresses: {
@@ -58,8 +59,9 @@ EOS
     },
 
     ipv6_method: {
-      type:    'Enum[auto, manual, disabled]',
-      desc:    'The IPv6 configuration method (e.g., auto, manual, disabled).',
+      type:    'Enum[auto, manual, disabled, ignore]',
+      desc:    'The IPv6 configuration method (e.g., auto, manual, disabled, ignore).',
+      default: 'auto',
     },
 
     ipv6_addresses: {
@@ -78,9 +80,9 @@ EOS
     },
 
     general_state: {
-      type:    'Enum[activated, unknown, down, connecting, connected, disconnecting]',
-      desc:    'The state of the connection (e.g., up, down).',
-      default: 'down',
+      type:      'Enum[activated, unknown, down, connecting, connected, disconnecting]',
+      desc:      'The read-only runtime state of the connection as reported by nmcli.',
+      behaviour: :read_only,
     },
 
     uuid: {
