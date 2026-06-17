@@ -22,10 +22,12 @@ Facter.add(:nm_active_connections) do
   confine kernel: 'Linux'
 
   setcode do
-    Facter.value(:nm_all_connections).select do |_, connection|
-      active = connection[:active] || connection['active']
-      state = connection[:state] || connection['state']
-      active && state == 'activated'
+    Facter.value(:nm_all_connections).each_with_object({}) do |(name, connection), active_connections|
+      active = connection['active'] || connection[:active]
+      state = connection['state'] || connection[:state]
+      next unless active && state == 'activated'
+
+      active_connections[name] = connection.transform_keys(&:to_s)
     end
   end
 end

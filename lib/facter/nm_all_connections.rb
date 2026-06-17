@@ -32,17 +32,17 @@ Facter.add(:nm_all_connections) do
       name,uuid,type,autoconnect,autoconnect_priority,readonly,dbus_path,active,device,state,active_path,filename = line.strip.split(':', 12)
 
       connections[name] = {}
-      connections[name][:uuid] = uuid unless uuid.empty?
-      connections[name][:type] = type unless type.empty?
-      connections[name][:autoconnect] = autoconnect == 'yes' unless autoconnect.empty?
-      connections[name][:autoconnect_priority] = autoconnect_priority unless autoconnect_priority.empty?
-      connections[name][:readonly] = readonly == 'yes' unless readonly.empty?
-      connections[name][:dbus_path] = dbus_path unless dbus_path.empty?
-      connections[name][:active] = active == 'yes' unless active.empty?
-      connections[name][:device] = device unless device.empty?
-      connections[name][:state] = state unless state.empty?
-      connections[name][:active_path] = active_path unless active_path.empty?
-      connections[name][:filename] = filename unless filename.empty?
+      connections[name]['uuid'] = uuid unless uuid.empty?
+      connections[name]['type'] = type unless type.empty?
+      connections[name]['autoconnect'] = autoconnect == 'yes' unless autoconnect.empty?
+      connections[name]['autoconnect_priority'] = autoconnect_priority unless autoconnect_priority.empty?
+      connections[name]['readonly'] = readonly == 'yes' unless readonly.empty?
+      connections[name]['dbus_path'] = dbus_path unless dbus_path.empty?
+      connections[name]['active'] = active == 'yes' unless active.empty?
+      connections[name]['device'] = device unless device.empty?
+      connections[name]['state'] = state unless state.empty?
+      connections[name]['active_path'] = active_path unless active_path.empty?
+      connections[name]['filename'] = filename unless filename.empty?
     end
 
     connections
