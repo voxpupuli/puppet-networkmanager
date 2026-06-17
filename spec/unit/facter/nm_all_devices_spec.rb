@@ -36,6 +36,22 @@ describe :nm_all_devices, type: :fact do
     )
   end
 
+  it 'skips blank lines in nmcli output' do
+    allow(Facter::Core::Execution).to receive(:execute)
+      .with('nmcli -t -e yes -c no -f device,type,state,ip4-connectivity,ip6-connectivity,dbus-path,connection,con-uuid,con-path device')
+      .and_return("\neth0:ethernet:connected:full:full:/dbus/dev0:System eth0:uuid-1:/dbus/con0\n\n")
+
+    expect(fact.value.keys).to eq(['eth0'])
+  end
+
+  it 'returns an empty hash when nmcli returns no devices' do
+    allow(Facter::Core::Execution).to receive(:execute)
+      .with('nmcli -t -e yes -c no -f device,type,state,ip4-connectivity,ip6-connectivity,dbus-path,connection,con-uuid,con-path device')
+      .and_return('')
+
+    expect(fact.value).to eq({})
+  end
+
   it 'returns an empty hash when nmcli fails' do
     allow(Facter::Core::Execution).to receive(:execute)
       .and_raise(Puppet::ExecutionFailure, 'nmcli failed')

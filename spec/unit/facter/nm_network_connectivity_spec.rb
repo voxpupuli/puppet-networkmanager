@@ -29,4 +29,12 @@ describe :nm_network_connectivity, type: :fact do
 
     expect(fact.value).to be_nil
   end
+
+  it 'strips surrounding whitespace from nmcli output' do
+    allow(Facter::Core::Execution).to receive(:execute)
+      .with('nmcli -c no network connectivity check')
+      .and_return(" full \n")
+
+    expect(fact.value).to eq('full')
+  end
 end

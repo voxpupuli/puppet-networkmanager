@@ -31,6 +31,31 @@ describe :nm_active_connections, type: :fact do
     )
   end
 
+  it 'handles string-keyed input from nm_all_connections' do
+    allow(Facter).to receive(:value).with(:nm_all_connections).and_return(
+      {
+        'foo' => { 'active' => true, 'state' => 'activated', 'uuid' => '123' },
+      }
+    )
+
+    expect(fact.value).to eq(
+      {
+        'foo' => { 'active' => true, 'state' => 'activated', 'uuid' => '123' },
+      }
+    )
+  end
+
+  it 'returns an empty hash when no connection is active' do
+    allow(Facter).to receive(:value).with(:nm_all_connections).and_return(
+      {
+        'foo' => { active: true, state: 'deactivated' },
+        'bar' => { active: false, state: 'activated' },
+      }
+    )
+
+    expect(fact.value).to eq({})
+  end
+
   it 'returns nil when nm_all_connections fails' do
     allow(Facter).to receive(:value).with(:nm_all_connections).and_return(nil)
 

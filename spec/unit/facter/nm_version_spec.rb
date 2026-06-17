@@ -30,4 +30,12 @@ describe :nm_version, type: :fact do
 
     expect(fact.value).to be_nil
   end
+
+  it 'strips surrounding whitespace from version output' do
+    allow(Facter::Util::Resolution).to receive(:exec)
+      .with('NetworkManager --version')
+      .and_return(" 1.51.6-1.el9 \n")
+
+    expect(fact.value).to eq('1.51.6-1.el9')
+  end
 end

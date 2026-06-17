@@ -29,4 +29,12 @@ describe :nm_network, type: :fact do
 
     expect(fact.value).to be_nil
   end
+
+  it 'strips surrounding whitespace from nmcli output' do
+    allow(Facter::Core::Execution).to receive(:execute)
+      .with('nmcli -c no network')
+      .and_return(" enabled \n")
+
+    expect(fact.value).to eq('enabled')
+  end
 end

@@ -47,6 +47,22 @@ describe :nm_all_connections, type: :fact do
     expect(fact.value['foo']['filename']).to eq('/etc/foo:profile.nmconnection')
   end
 
+  it 'skips blank lines in nmcli output' do
+    allow(Facter::Core::Execution).to receive(:execute)
+      .with('nmcli -t -f name,uuid,type,autoconnect,autoconnect-priority,readonly,dbus-path,active,device,state,active-path,filename con show')
+      .and_return("\nfoo:123:ethernet:yes:0:no:/dbus/1:yes:eth0:activated:/active/1:/etc/foo.nmconnection\n\n")
+
+    expect(fact.value.keys).to eq(['foo'])
+  end
+
+  it 'returns an empty hash when nmcli returns no connections' do
+    allow(Facter::Core::Execution).to receive(:execute)
+      .with('nmcli -t -f name,uuid,type,autoconnect,autoconnect-priority,readonly,dbus-path,active,device,state,active-path,filename con show')
+      .and_return('')
+
+    expect(fact.value).to eq({})
+  end
+
   it 'returns an empty hash when nmcli fails' do
     allow(Facter::Core::Execution).to receive(:execute)
       .and_raise(Puppet::ExecutionFailure, 'nmcli failed')
