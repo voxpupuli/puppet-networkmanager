@@ -41,6 +41,7 @@ EOS
       type:    'Boolean',
       desc:    'Whether to run an immediate runtime reapply on the device after profile changes.',
       default: false,
+      behaviour: :parameter,
     },
 
     ipv4_method: {
@@ -66,7 +67,7 @@ EOS
 
     ipv4_routes: {
       type:    'Optional[Array[Struct[{destination => Pattern[/\\A\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\/\\d{1,2}\\z/], Optional[next_hop] => Pattern[/\\A\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\z/], Optional[metric] => Integer[0]}]]]',
-      desc:    'An array of IPv4 routes, each with destination, optional next_hop and optional metric.',
+      desc:    'Additional static IPv4 routes. Do not declare the connected network from ipv4_addresses or a default route already represented by ipv4_gateway.',
     },
 
     ipv6_method: {
@@ -92,7 +93,7 @@ EOS
 
     ipv6_routes: {
       type:    'Optional[Array[Struct[{destination => String[1], Optional[next_hop] => String[1], Optional[metric] => Integer[0]}]]]',
-      desc:    'An array of IPv6 routes, each with destination, optional next_hop and optional metric.',
+      desc:    'Additional static IPv6 routes. Do not declare the connected network from ipv6_addresses or a default route already represented by ipv6_gateway.',
     },
 
     general_state: {
@@ -102,5 +103,5 @@ EOS
     },
 
     # ... weitere Attribute
-  }
+  },
 )

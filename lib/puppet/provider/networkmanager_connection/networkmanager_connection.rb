@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'puppet/resource_api/simple_provider'
+require 'ipaddr'
 
 # Implementation for the networkmanager_connection type using the Resource API.
 # This provider interacts with NetworkManager via the `nmcli` command-line tool.
@@ -95,6 +96,7 @@ class Puppet::Provider::NetworkmanagerConnection::NetworkmanagerConnection < Pup
   end
 
   def apply_connection_settings(context, name, resource)
+    validate_routes!(name, resource)
     modifications = []
 
     PROPERTY_MAP.each do |key, nmcli_key|
@@ -108,6 +110,45 @@ class Puppet::Provider::NetworkmanagerConnection::NetworkmanagerConnection < Pup
 
     nmcli('connection', 'modify', name, *modifications)
     maybe_reapply_connection(context, name, resource)
+  end
+
+  def validate_routes!(name, resource)
+    validate_ip_routes!(name, resource, 4)
+    validate_ip_routes!(name, resource, 6)
+  end
+
+  def validate_ip_routes!(name, resource, family)
+    routes = resource[:"ipv#{family}_routes"] || []
+    return if routes.empty?
+
+    gateway = resource[:"ipv#{family}_gateway"]
+    default_destination = (family == 4 ? '0.0.0.0/0' : '::/0')
+
+    if gateway && routes.any? { |route| same_network?(route_value(route, :destination), default_destination) }
+      raise Puppet::Error, "Connection '#{name}' declares both ipv#{family}_gateway and a default route in ipv#{family}_routes"
+    end
+
+    connected_networks = Array(resource[:"ipv#{family}_addresses"]).map { |address| canonical_network(address) }
+    duplicate = routes.find do |route|
+      connected_networks.include?(canonical_network(route_value(route, :destination)))
+    end
+    return unless duplicate
+
+    destination = route_value(duplicate, :destination)
+    raise Puppet::Error, "Connection '#{name}' declares connected network '#{destination}' in ipv#{family}_routes; it is created automatically from ipv#{family}_addresses"
+  end
+
+  def route_value(route, key)
+    route[key] || route[key.to_s]
+  end
+
+  def same_network?(left, right)
+    canonical_network(left) == canonical_network(right)
+  end
+
+  def canonical_network(value)
+    network = IPAddr.new(value)
+    [network.to_s, network.prefix]
   end
 
   def maybe_reapply_connection(context, name, resource)
@@ -163,10 +204,10 @@ class Puppet::Provider::NetworkmanagerConnection::NetworkmanagerConnection < Pup
   end
 
   def parse_routes(value)
-    return nil if value.nil? || value.strip.empty?
+    return [] if value.nil? || value.strip.empty?
 
     routes = value.split(',').map(&:strip).reject(&:empty?).map { |route| parse_route_entry(route) }.compact
-    routes.empty? ? nil : routes
+    routes
   end
 
   def parse_route_entry(route)

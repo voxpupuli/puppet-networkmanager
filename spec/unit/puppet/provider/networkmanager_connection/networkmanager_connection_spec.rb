@@ -89,12 +89,12 @@ RSpec.describe Puppet::Provider::NetworkmanagerConnection::NetworkmanagerConnect
                                      ipv4_addresses: nil,
                                      ipv4_dns: nil,
                                      ipv4_gateway: nil,
-                                     ipv4_routes: nil,
+                                     ipv4_routes: [],
                                      ipv6_method: nil,
                                      ipv6_addresses: nil,
                                      ipv6_dns: nil,
                                      ipv6_gateway: nil,
-                                     ipv6_routes: nil,
+                                     ipv6_routes: [],
                                      general_state: 'connected',
                                    },
                                  ])
@@ -115,12 +115,12 @@ RSpec.describe Puppet::Provider::NetworkmanagerConnection::NetworkmanagerConnect
                                      ipv4_addresses: ['192.168.1.10/24', '192.168.1.11/24'],
                                      ipv4_dns: ['1.1.1.1', '8.8.8.8'],
                                      ipv4_gateway: nil,
-                                     ipv4_routes: nil,
+                                     ipv4_routes: [],
                                      ipv6_method: nil,
                                      ipv6_addresses: nil,
                                      ipv6_dns: nil,
                                      ipv6_gateway: nil,
-                                     ipv6_routes: nil,
+                                     ipv6_routes: [],
                                      general_state: 'unknown',
                                    },
                                  ])
@@ -128,7 +128,8 @@ RSpec.describe Puppet::Provider::NetworkmanagerConnection::NetworkmanagerConnect
 
     it 'reads routes from connection profile fields' do
       allow(provider).to receive(:nmcli).with('-t', 'connection', 'show', 'foo').and_return(
-        "ipv4.routes:10.10.0.0/16 10.0.2.1 100,10.20.0.0/16 10.0.2.1 200\nipv6.routes:2001:db8:10::/64 2001:db8::1 100\n"
+        "ipv4.routes:10.10.0.0/16 10.0.2.1 100,10.20.0.0/16 10.0.2.1 200\n" \
+        "ipv6.routes:2001:db8:10::/64 2001:db8::1 100\n"
       )
 
       expect(provider.get(context, 'foo')).to eq([
@@ -234,6 +235,87 @@ RSpec.describe Puppet::Provider::NetworkmanagerConnection::NetworkmanagerConnect
                        },
                      },
                    })
+    end
+
+    it 'rejects an IPv4 connected network in the static routes' do
+      expect(context).to receive(:notice).with("Updating 'office'")
+      expect(provider).not_to receive(:nmcli)
+
+      expect do
+        provider.set(context, {
+                       'office' => {
+                         is: {
+                           name: 'office',
+                           ensure: 'present',
+                         },
+                         should: {
+                           name: 'office',
+                           ensure: 'present',
+                           ipv4_addresses: ['10.0.2.15/24'],
+                           ipv4_routes: [
+                             { destination: '10.0.2.0/24', next_hop: '0.0.0.0', metric: 100 },
+                           ],
+                         },
+                       },
+                     })
+      end.to raise_error(Puppet::Error, %r{connected network '10.0.2.0/24'})
+    end
+
+    it 'rejects an IPv4 default route when an IPv4 gateway is set' do
+      expect(context).to receive(:notice).with("Updating 'office'")
+      expect(provider).not_to receive(:nmcli)
+
+      expect do
+        provider.set(context, {
+                       'office' => {
+                         is: {
+                           name: 'office',
+                           ensure: 'present',
+                         },
+                         should: {
+                           name: 'office',
+                           ensure: 'present',
+                           ipv4_gateway: '10.0.2.2',
+                           ipv4_routes: [
+                             { destination: '0.0.0.0/0', next_hop: '10.0.2.2', metric: 100 },
+                           ],
+                         },
+                       },
+                     })
+      end.to raise_error(Puppet::Error, %r{both ipv4_gateway and a default route})
+    end
+
+    it 'rejects IPv6 connected and gateway routes using the same rules' do
+      expect(context).to receive(:notice).twice
+      expect(provider).not_to receive(:nmcli)
+
+      expect do
+        provider.set(context, {
+                       'connected' => {
+                         is: { name: 'connected', ensure: 'present' },
+                         should: {
+                           name: 'connected',
+                           ensure: 'present',
+                           ipv6_addresses: ['2001:db8::10/64'],
+                           ipv6_routes: [{ destination: '2001:db8::/64' }],
+                         },
+                       },
+                     })
+      end.to raise_error(Puppet::Error, %r{connected network '2001:db8::/64'})
+
+      expect do
+        provider.set(context, {
+                       'default' => {
+                         is: { name: 'default', ensure: 'present' },
+                         should: {
+                           name: 'default',
+                           ensure: 'present',
+                           ipv6_gateway: '2001:db8::1',
+                           ipv6_routes: [{ destination: '::/0', next_hop: '2001:db8::1' }],
+                         },
+                       },
+                     })
+      end.to raise_error(Puppet::Error, %r{both ipv6_gateway and a default route})
     end
 
     it 'reapplies the device immediately when requested' do
