@@ -45,6 +45,7 @@ RSpec.describe Puppet::Provider::NetworkmanagerConnection::NetworkmanagerConnect
     end
 
     it 'normalizes and filters requested names' do
+      allow(provider).to receive(:list_connections).and_return(['foo'])
       allow(provider).to receive(:fetch_connection_data).with(context, 'foo').and_return(
         {
           name: 'foo',
@@ -60,6 +61,14 @@ RSpec.describe Puppet::Provider::NetworkmanagerConnection::NetworkmanagerConnect
       ]
     end
 
+    it 'returns no resource without querying details when a requested connection is absent' do
+      allow(provider).to receive(:list_connections).and_return(['existing'])
+      expect(provider).not_to receive(:fetch_connection_data)
+      expect(context).not_to receive(:err)
+
+      expect(provider.get(context, 'missing')).to eq([])
+    end
+
     it 'returns an empty array when listing connections fails' do
       allow(provider).to receive(:list_connections).and_raise(Puppet::ExecutionFailure, 'nmcli failed')
       expect(context).to receive(:err).with(%r{nmcli failed})
@@ -68,6 +77,7 @@ RSpec.describe Puppet::Provider::NetworkmanagerConnection::NetworkmanagerConnect
     end
 
     it 'logs when fetching a single connection fails' do
+      allow(provider).to receive(:list_connections).and_return(['foo'])
       allow(provider).to receive(:nmcli).with('-t', 'connection', 'show', 'foo').and_raise(Puppet::ExecutionFailure, 'connection missing')
       expect(context).to receive(:err).with(%r{Error fetching NetworkManager connection 'foo': connection missing})
 
@@ -75,6 +85,7 @@ RSpec.describe Puppet::Provider::NetworkmanagerConnection::NetworkmanagerConnect
     end
 
     it 'normalizes general state values into the type enum' do
+      allow(provider).to receive(:list_connections).and_return(['foo'])
       allow(provider).to receive(:nmcli).with('-t', 'connection', 'show', 'foo').and_return(
         "GENERAL.STATE:100 (connected)\nconnection.type:wifi\nconnection.uuid:123\n",
       )
@@ -101,6 +112,7 @@ RSpec.describe Puppet::Provider::NetworkmanagerConnection::NetworkmanagerConnect
     end
 
     it 'reads addresses and dns from connection profile fields' do
+      allow(provider).to receive(:list_connections).and_return(['foo'])
       allow(provider).to receive(:nmcli).with('-t', 'connection', 'show', 'foo').and_return(
         "ipv4.addresses:192.168.1.10/24,192.168.1.11/24\nipv4.dns:1.1.1.1,8.8.8.8\n",
       )
@@ -127,6 +139,7 @@ RSpec.describe Puppet::Provider::NetworkmanagerConnection::NetworkmanagerConnect
     end
 
     it 'reads routes from connection profile fields' do
+      allow(provider).to receive(:list_connections).and_return(['foo'])
       allow(provider).to receive(:nmcli).with('-t', 'connection', 'show', 'foo').and_return(
         "ipv4.routes:10.10.0.0/16 10.0.2.1 100,10.20.0.0/16 10.0.2.1 200\n" \
         "ipv6.routes:2001:db8:10::/64 2001:db8::1 100\n",
@@ -143,15 +156,15 @@ RSpec.describe Puppet::Provider::NetworkmanagerConnection::NetworkmanagerConnect
                                                      ipv4_dns: nil,
                                                      ipv4_gateway: nil,
                                                      ipv4_routes: [
-                                                       { destination: '10.10.0.0/16', next_hop: '10.0.2.1', metric: 100 },
-                                                       { destination: '10.20.0.0/16', next_hop: '10.0.2.1', metric: 200 },
+                                                       { 'destination' => '10.10.0.0/16', 'next_hop' => '10.0.2.1', 'metric' => 100 },
+                                                       { 'destination' => '10.20.0.0/16', 'next_hop' => '10.0.2.1', 'metric' => 200 },
                                                      ],
                                                      ipv6_method: nil,
                                                      ipv6_addresses: nil,
                                                      ipv6_dns: nil,
                                                      ipv6_gateway: nil,
                                                      ipv6_routes: [
-                                                       { destination: '2001:db8:10::/64', next_hop: '2001:db8::1', metric: 100 },
+                                                       { 'destination' => '2001:db8:10::/64', 'next_hop' => '2001:db8::1', 'metric' => 100 },
                                                      ],
                                                      general_state: 'unknown',
                                                    },
@@ -184,6 +197,25 @@ RSpec.describe Puppet::Provider::NetworkmanagerConnection::NetworkmanagerConnect
                          type: 'wifi',
                          device: 'wlan0',
                          ipv4_method: 'auto',
+                       },
+                     },
+                   })
+    end
+
+    it 'creates a connection when Puppet represents absent as a symbol' do
+      expect(context).to receive(:notice).with("Creating 'home'")
+      expect(provider).to receive(:nmcli).with('connection', 'add', 'con-name', 'home', 'type', 'wifi')
+
+      provider.set(context, {
+                     'home' => {
+                       is: {
+                         name: 'home',
+                         ensure: :absent,
+                       },
+                       should: {
+                         name: 'home',
+                         ensure: :present,
+                         type: 'wifi',
                        },
                      },
                    })
@@ -378,6 +410,24 @@ RSpec.describe Puppet::Provider::NetworkmanagerConnection::NetworkmanagerConnect
                        should: {
                          name: 'old',
                          ensure: 'absent',
+                       },
+                     },
+                   })
+    end
+
+    it 'deletes a connection when Puppet represents absent as a symbol' do
+      expect(context).to receive(:notice).with("Deleting 'old'")
+      expect(provider).to receive(:nmcli).with('connection', 'delete', 'old')
+
+      provider.set(context, {
+                     'old' => {
+                       is: {
+                         name: 'old',
+                         ensure: :present,
+                       },
+                       should: {
+                         name: 'old',
+                         ensure: :absent,
                        },
                      },
                    })

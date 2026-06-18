@@ -29,10 +29,13 @@ class Puppet::Provider::NetworkmanagerConnection::NetworkmanagerConnection < Pup
     context.debug("Fetching NetworkManager connections for names: #{requested_names.inspect}")
 
     # Fetch all connections if no specific names are provided, otherwise fetch each requested connection.
+    existing_connections = list_connections
     connections = if requested_names.empty?
-                    list_connections.map { |connection| fetch_connection_data(context, connection) }
+                    existing_connections.map { |connection| fetch_connection_data(context, connection) }
                   else
-                    requested_names.map { |connection| fetch_connection_data(context, connection) }
+                    requested_names
+                      .select { |connection| existing_connections.include?(connection) }
+                      .map { |connection| fetch_connection_data(context, connection) }
                   end
 
     # Remove any nil entries (e.g., if a connection fetch failed).
@@ -48,10 +51,10 @@ class Puppet::Provider::NetworkmanagerConnection::NetworkmanagerConnection < Pup
       is = change[:is] || {}
       should = change[:should] || {}
 
-      if should[:ensure] == 'absent'
+      if should[:ensure].to_s == 'absent'
         context.notice("Deleting '#{name}'")
         delete_connection(name)
-      elsif is.empty? || is[:ensure] == 'absent'
+      elsif is.empty? || is[:ensure].to_s == 'absent'
         context.notice("Creating '#{name}'")
         create_connection(context, name, should)
       else
@@ -211,9 +214,9 @@ class Puppet::Provider::NetworkmanagerConnection::NetworkmanagerConnection < Pup
     parts = route.split(%r{\s+})
     return nil if parts.empty?
 
-    parsed = { destination: parts[0] }
-    parsed[:next_hop] = parts[1] if parts[1] && !parts[1].empty?
-    parsed[:metric] = Integer(parts[2], 10) if parts[2] && !parts[2].empty?
+    parsed = { 'destination' => parts[0] }
+    parsed['next_hop'] = parts[1] if parts[1] && !parts[1].empty?
+    parsed['metric'] = Integer(parts[2], 10) if parts[2] && !parts[2].empty?
     parsed
   rescue ArgumentError
     parsed
