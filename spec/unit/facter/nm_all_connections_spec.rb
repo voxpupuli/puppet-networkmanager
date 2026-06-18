@@ -75,6 +75,11 @@ describe :nm_all_connections, type: :fact do
     expect(Object.private_method_defined?(:split_profile_list)).to be(false)
   end
 
+  it 'loads helpers from the PuppetX namespace' do
+    expect(PuppetX::Networkmanager::Facts::AllConnections).to respond_to(:fetch_connection_details)
+    expect(PuppetX::Networkmanager::Facts::AllConnections).to respond_to(:split_profile_list)
+  end
+
   it 'parses provider-settable profile fields' do
     allow(Facter::Core::Execution).to receive(:execute)
       .with('nmcli -t -f name,uuid,type,autoconnect,autoconnect-priority,readonly,dbus-path,active,device,state,active-path,filename con show')
