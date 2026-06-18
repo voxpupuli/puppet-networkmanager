@@ -2,7 +2,7 @@
 
 require 'spec_helper'
 
-ensure_module_defined('Puppet::Provider::NetworkmanagerConnection')
+Puppet::Provider.const_set(:NetworkmanagerConnection, Module.new) unless Puppet::Provider.const_defined?(:NetworkmanagerConnection, false)
 require 'puppet/provider/networkmanager_connection/networkmanager_connection'
 
 RSpec.describe Puppet::Provider::NetworkmanagerConnection::NetworkmanagerConnection do
