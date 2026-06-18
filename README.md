@@ -199,17 +199,22 @@ Run the Vagrant test environment:
 vagrant up
 vagrant ssh
 sudo -i
-puppet apply -e 'include networkmanager' --noop
-puppet apply -e 'include networkmanager'
+/opt/puppetlabs/bin/puppet apply /vagrant/test/example.pp
 ```
 
-Inspect the resulting profile and routes:
+Run the same command a second time to verify idempotency. It should report no
+changes. Inspect the resulting profile and routes:
 
 ```shell
-nmcli connection show enp0s8
-ip address show enp0s8
-ip route show
+nmcli connection show br-test
+nmcli -f ipv4.routes connection show br-test
+nmcli device status
 ```
+
+The example creates an unused bridge first, which safely exercises profile creation and route parsing.
+The Vagrant NAT interface remains available for SSH.
+It is also possible to configure the enp0s9 interface and test with this.
+See `test/example.pp` for details.
 
 ## Development status
 
