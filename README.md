@@ -9,6 +9,14 @@ profiles with Puppet.
 > ⚠️ This module is under active development and is not yet recommended for
 > production use.
 
+> **AI usage disclosure:** Significant parts of this module have been written
+> or refactored with the assistance of large language models (LLMs). Human
+> contributors remain responsible for reviewing, understanding, testing, and
+> maintaining all submitted code.
+
+> **Contributor note:** AI agents and contributors using AI-assisted tooling
+> must follow the repository-specific instructions in [AGENTS.md](AGENTS.md).
+
 ## Features
 
 - Install the NetworkManager package.
