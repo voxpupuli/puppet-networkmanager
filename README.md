@@ -1,4 +1,4 @@
-# networkmanager
+# NetworkManager module for Puppet
 
 [![License](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)](LICENSE)
 [![Sponsored by betadots GmbH](https://img.shields.io/badge/Sponsored%20by-betadots%20GmbH-blue.svg)](https://www.betadots.de)
@@ -20,19 +20,6 @@ profiles with Puppet.
 - Manage IPv4 and IPv6 addresses, DNS servers, gateways, and static routes.
 - Reapply profile changes to an active device without reconnecting it. 🔄
 - Reject redundant connected routes and duplicate default-route declarations.
-
-## Requirements
-
-- OpenVox `>= 8.10.0 < 9.0.0`
-- For the Type/Provider: NetworkManager and `nmcli` on the managed system
-- `puppet/extlib >= 7.5.1 < 8.0.0`
-
-Supported operating systems according to `metadata.json`:
-
-- CentOS 9 and 10
-- Red Hat Enterprise Linux 9 and 10
-- Rocky Linux 9 and 10
-- AlmaLinux 9 and 10
 
 ## Usage
 
