@@ -29,6 +29,9 @@
 # @param manage_nm_service_dispatcher
 #   Whether to manage the NetworkManager-dispatcher service.
 #
+# @param options
+#   A hash of options to include in the NetworkManager configuration file.
+#
 # @param package_name
 #   The name of the NetworkManager package.
 #
@@ -69,6 +72,7 @@ class networkmanager (
   Boolean $manage_nm_service_wait_online = false,
   Boolean $manage_nm_service_dispatcher = false,
 
+  Hash $options = {},
   String[1] $config_file = '/etc/NetworkManager/NetworkManager.conf',
   String[1] $config_file_mode = '0644',
   String[1] $config_file_owner = 'root',
@@ -89,7 +93,11 @@ class networkmanager (
   String[1] $service_dispatcher_ensure = 'stopped',
   Boolean $service_dispatcher_enable = true,
 ) {
-  include networkmanager::install
-  include networkmanager::config
-  include networkmanager::service
+  contain networkmanager::install
+  contain networkmanager::config
+  contain networkmanager::service
+
+  Class['networkmanager::install']
+  -> Class['networkmanager::config']
+  ~> Class['networkmanager::service']
 }

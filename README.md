@@ -38,11 +38,11 @@ By default, the class:
 
 ### Manage NetworkManager.conf
 
-The `networkmanager::config` class converts its `options` hash to INI format
+The `networkmanager` class converts its `options` hash to INI format
 using `puppet/extlib`.
 
 ```puppet
-class { 'networkmanager::config':
+class { 'networkmanager':
   manage_nm_config => true,
   config_file      => '/etc/NetworkManager/NetworkManager.conf',
   options          => {
