@@ -101,7 +101,5 @@ Puppet::ResourceApi.register_type(
       desc:      'The read-only runtime state of the connection as reported by nmcli.',
       behaviour: :read_only,
     },
-
-    # ... weitere Attribute
   },
 )
