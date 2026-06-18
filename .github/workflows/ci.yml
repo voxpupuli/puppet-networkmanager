@@ -47,6 +47,9 @@ jobs:
     name: Puppet
     uses: voxpupuli/gha-puppet/.github/workflows/beaker.yml@v4
     with:
+      beaker_hypervisor: vagrant_libvirt
+      install_vagrant_dependencies: true
+      timeout_minutes: 90
       beaker_staging_url: ${{ inputs.beaker_staging_url }}
       beaker_collection: ${{ inputs.beaker_collection }}
       beaker_staging_version: ${{ inputs.beaker_staging_version }}
