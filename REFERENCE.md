@@ -34,6 +34,7 @@ The following parameters are available in the `networkmanager` class:
 * [`manage_nm_service`](#-networkmanager--manage_nm_service)
 * [`manage_nm_service_wait_online`](#-networkmanager--manage_nm_service_wait_online)
 * [`manage_nm_service_dispatcher`](#-networkmanager--manage_nm_service_dispatcher)
+* [`options`](#-networkmanager--options)
 * [`package_name`](#-networkmanager--package_name)
 * [`package_version`](#-networkmanager--package_version)
 * [`service_name`](#-networkmanager--service_name)
@@ -117,6 +118,14 @@ Data type: `Boolean`
 Whether to manage the NetworkManager-dispatcher service.
 
 Default value: `false`
+
+##### <a name="-networkmanager--options"></a>`options`
+
+Data type: `Hash`
+
+A hash of options to include in the NetworkManager configuration file.
+
+Default value: `{}`
 
 ##### <a name="-networkmanager--package_name"></a>`package_name`
 
@@ -210,217 +219,13 @@ Default value: `true`
 
 This class manages the NetworkManager configuration file.
 
-#### Parameters
-
-The following parameters are available in the `networkmanager::config` class:
-
-* [`options`](#-networkmanager--config--options)
-* [`manage_nm_config`](#-networkmanager--config--manage_nm_config)
-* [`config_file`](#-networkmanager--config--config_file)
-* [`config_file_mode`](#-networkmanager--config--config_file_mode)
-* [`config_file_owner`](#-networkmanager--config--config_file_owner)
-* [`config_file_group`](#-networkmanager--config--config_file_group)
-
-##### <a name="-networkmanager--config--options"></a>`options`
-
-Data type: `Hash`
-
-A hash of options to be included in the configuration file.
-
-Default value: `{}`
-
-##### <a name="-networkmanager--config--manage_nm_config"></a>`manage_nm_config`
-
-Data type: `Boolean`
-
-Whether to manage the NetworkManager configuration file.
-
-Default value: `false`
-
-##### <a name="-networkmanager--config--config_file"></a>`config_file`
-
-Data type: `String[1]`
-
-The path to the NetworkManager configuration file.
-
-Default value: `'/etc/NetworkManager/NetworkManager.conf'`
-
-##### <a name="-networkmanager--config--config_file_mode"></a>`config_file_mode`
-
-Data type: `String`
-
-The mode of the NetworkManager configuration file.
-
-Default value: `'0644'`
-
-##### <a name="-networkmanager--config--config_file_owner"></a>`config_file_owner`
-
-Data type: `String`
-
-The owner of the NetworkManager configuration file.
-
-Default value: `'root'`
-
-##### <a name="-networkmanager--config--config_file_group"></a>`config_file_group`
-
-Data type: `String`
-
-The group of the NetworkManager configuration file.
-
-Default value: `'root'`
-
 ### <a name="networkmanager--install"></a>`networkmanager::install`
 
 This class manages the installation of NetworkManager.
 
-#### Parameters
-
-The following parameters are available in the `networkmanager::install` class:
-
-* [`manage_nm_package`](#-networkmanager--install--manage_nm_package)
-* [`package_name`](#-networkmanager--install--package_name)
-* [`package_version`](#-networkmanager--install--package_version)
-
-##### <a name="-networkmanager--install--manage_nm_package"></a>`manage_nm_package`
-
-Data type: `Boolean`
-
-Whether to manage the NetworkManager package.
-
-Default value: `true`
-
-##### <a name="-networkmanager--install--package_name"></a>`package_name`
-
-Data type: `String[1]`
-
-The name of the NetworkManager package.
-
-Default value: `'NetworkManager'`
-
-##### <a name="-networkmanager--install--package_version"></a>`package_version`
-
-Data type: `String[1]`
-
-The version of the NetworkManager package.
-
-Default value: `'installed'`
-
 ### <a name="networkmanager--service"></a>`networkmanager::service`
 
 This class manages the NetworkManager service.
-
-#### Parameters
-
-The following parameters are available in the `networkmanager::service` class:
-
-* [`manage_nm_service`](#-networkmanager--service--manage_nm_service)
-* [`service_name`](#-networkmanager--service--service_name)
-* [`service_ensure`](#-networkmanager--service--service_ensure)
-* [`service_enable`](#-networkmanager--service--service_enable)
-* [`manage_nm_service_wait_online`](#-networkmanager--service--manage_nm_service_wait_online)
-* [`service_wait_online_name`](#-networkmanager--service--service_wait_online_name)
-* [`service_wait_online_ensure`](#-networkmanager--service--service_wait_online_ensure)
-* [`service_wait_online_enable`](#-networkmanager--service--service_wait_online_enable)
-* [`manage_nm_service_dispatcher`](#-networkmanager--service--manage_nm_service_dispatcher)
-* [`service_dispatcher_name`](#-networkmanager--service--service_dispatcher_name)
-* [`service_dispatcher_ensure`](#-networkmanager--service--service_dispatcher_ensure)
-* [`service_dispatcher_enable`](#-networkmanager--service--service_dispatcher_enable)
-
-##### <a name="-networkmanager--service--manage_nm_service"></a>`manage_nm_service`
-
-Data type: `Boolean`
-
-Whether to manage the NetworkManager service.
-
-Default value: `true`
-
-##### <a name="-networkmanager--service--service_name"></a>`service_name`
-
-Data type: `String[1]`
-
-The name of the NetworkManager service.
-
-Default value: `'NetworkManager'`
-
-##### <a name="-networkmanager--service--service_ensure"></a>`service_ensure`
-
-Data type: `String[1]`
-
-The desired state of the NetworkManager service.
-
-Default value: `'running'`
-
-##### <a name="-networkmanager--service--service_enable"></a>`service_enable`
-
-Data type: `Boolean`
-
-Whether to enable the NetworkManager service at boot.
-
-Default value: `true`
-
-##### <a name="-networkmanager--service--manage_nm_service_wait_online"></a>`manage_nm_service_wait_online`
-
-Data type: `Boolean`
-
-Whether to manage the NetworkManager-wait-online service.
-
-Default value: `false`
-
-##### <a name="-networkmanager--service--service_wait_online_name"></a>`service_wait_online_name`
-
-Data type: `String[1]`
-
-The name of the NetworkManager-wait-online service.
-
-Default value: `'NetworkManager-wait-online.service'`
-
-##### <a name="-networkmanager--service--service_wait_online_ensure"></a>`service_wait_online_ensure`
-
-Data type: `String[1]`
-
-The desired state of the NetworkManager-wait-online service.
-
-Default value: `'running'`
-
-##### <a name="-networkmanager--service--service_wait_online_enable"></a>`service_wait_online_enable`
-
-Data type: `Boolean`
-
-Whether to enable the NetworkManager-wait-online service at boot.
-
-Default value: `true`
-
-##### <a name="-networkmanager--service--manage_nm_service_dispatcher"></a>`manage_nm_service_dispatcher`
-
-Data type: `Boolean`
-
-Whether to manage the NetworkManager-dispatcher service.
-
-Default value: `false`
-
-##### <a name="-networkmanager--service--service_dispatcher_name"></a>`service_dispatcher_name`
-
-Data type: `String[1]`
-
-The name of the NetworkManager-dispatcher service.
-
-Default value: `'NetworkManager-dispatcher.service'`
-
-##### <a name="-networkmanager--service--service_dispatcher_ensure"></a>`service_dispatcher_ensure`
-
-Data type: `String[1]`
-
-The desired state of the NetworkManager-dispatcher service.
-
-Default value: `'stopped'`
-
-##### <a name="-networkmanager--service--service_dispatcher_enable"></a>`service_dispatcher_enable`
-
-Data type: `Boolean`
-
-Whether to enable the NetworkManager-dispatcher service at boot.
-
-Default value: `true`
 
 ## Resource types
 
