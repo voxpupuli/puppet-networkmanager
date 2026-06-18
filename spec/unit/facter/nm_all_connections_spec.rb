@@ -70,6 +70,11 @@ describe :nm_all_connections, type: :fact do
     expect(fact.value).to be_nil
   end
 
+  it 'does not add fact helpers to Object' do
+    expect(Object.private_method_defined?(:fetch_connection_details)).to be(false)
+    expect(Object.private_method_defined?(:split_profile_list)).to be(false)
+  end
+
   it 'parses provider-settable profile fields' do
     allow(Facter::Core::Execution).to receive(:execute)
       .with('nmcli -t -f name,uuid,type,autoconnect,autoconnect-priority,readonly,dbus-path,active,device,state,active-path,filename con show')

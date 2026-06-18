@@ -317,6 +317,54 @@ RSpec.describe Puppet::Provider::NetworkmanagerConnection::NetworkmanagerConnect
       end.to raise_error(Puppet::Error, %r{both ipv4_gateway and a default route})
     end
 
+    it 'reports an invalid address as a Puppet error' do
+      expect(context).to receive(:notice).with("Updating 'office'")
+      expect(provider).not_to receive(:nmcli)
+
+      expect do
+        provider.set(context, {
+                       'office' => {
+                         is: {
+                           name: 'office',
+                           ensure: 'present',
+                         },
+                         should: {
+                           name: 'office',
+                           ensure: 'present',
+                           ipv4_addresses: ['invalid-address'],
+                           ipv4_routes: [
+                             { destination: '10.0.0.0/24' },
+                           ],
+                         },
+                       },
+                     })
+      end.to raise_error(Puppet::Error, %r{Connection 'office' has invalid ipv4 address 'invalid-address'})
+    end
+
+    it 'reports a missing route destination as a Puppet error' do
+      expect(context).to receive(:notice).with("Updating 'office'")
+      expect(provider).not_to receive(:nmcli)
+
+      expect do
+        provider.set(context, {
+                       'office' => {
+                         is: {
+                           name: 'office',
+                           ensure: 'present',
+                         },
+                         should: {
+                           name: 'office',
+                           ensure: 'present',
+                           ipv4_gateway: '10.0.0.1',
+                           ipv4_routes: [
+                             { metric: 100 },
+                           ],
+                         },
+                       },
+                     })
+      end.to raise_error(Puppet::Error, %r{Connection 'office' has invalid ipv4 route destination})
+    end
+
     it 'rejects IPv6 connected and gateway routes using the same rules' do
       expect(context).to receive(:notice).twice
       expect(provider).not_to receive(:nmcli)

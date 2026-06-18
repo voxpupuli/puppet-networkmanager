@@ -129,11 +129,14 @@ class Puppet::Provider::NetworkmanagerConnection::NetworkmanagerConnection < Pup
     gateway = resource[:"ipv#{family}_gateway"]
     default_destination = ((family == 4) ? '0.0.0.0/0' : '::/0')
 
-    raise Puppet::Error, "Connection '#{name}' declares both ipv#{family}_gateway and a default route in ipv#{family}_routes" if gateway && routes.any? { |route| same_network?(route_value(route, :destination), default_destination) }
+    route_description = "ipv#{family} route destination"
+    raise Puppet::Error, "Connection '#{name}' declares both ipv#{family}_gateway and a default route in ipv#{family}_routes" if gateway && routes.any? { |route| same_network?(route_value(route, :destination), default_destination, name, route_description) }
 
-    connected_networks = Array(resource[:"ipv#{family}_addresses"]).map { |address| canonical_network(address) }
+    connected_networks = Array(resource[:"ipv#{family}_addresses"]).map do |address|
+      canonical_network(address, name, "ipv#{family} address")
+    end
     duplicate = routes.find do |route|
-      connected_networks.include?(canonical_network(route_value(route, :destination)))
+      connected_networks.include?(canonical_network(route_value(route, :destination), name, route_description))
     end
     return unless duplicate
 
@@ -145,13 +148,15 @@ class Puppet::Provider::NetworkmanagerConnection::NetworkmanagerConnection < Pup
     route[key] || route[key.to_s]
   end
 
-  def same_network?(left, right)
-    canonical_network(left) == canonical_network(right)
+  def same_network?(left, right, name, description)
+    canonical_network(left, name, description) == canonical_network(right, name, description)
   end
 
-  def canonical_network(value)
+  def canonical_network(value, name, description)
     network = IPAddr.new(value)
     [network.to_s, network.prefix]
+  rescue ArgumentError => e
+    raise Puppet::Error, "Connection '#{name}' has invalid #{description} '#{value}': #{e.message}"
   end
 
   def maybe_reapply_connection(context, name, resource)
@@ -219,6 +224,8 @@ class Puppet::Provider::NetworkmanagerConnection::NetworkmanagerConnection < Pup
     parsed['metric'] = Integer(parts[2], 10) if parts[2] && !parts[2].empty?
     parsed
   rescue ArgumentError
+    # The metric is optional. Keep the usable route fields when nmcli reports
+    # a metric that cannot be converted to an Integer.
     parsed
   end
 
@@ -299,31 +306,6 @@ class Puppet::Provider::NetworkmanagerConnection::NetworkmanagerConnection < Pup
 
     # Return `nil` if the `nmcli` command fails for this connection.
     nil
-  end
-
-  # Extracts multiple values (e.g., IP addresses or DNS servers) from the `nmcli` output.
-  # This method handles fields like `IP4.ADDRESS[1]`, `IP4.ADDRESS[2]`, etc.
-  #
-  # @param data [Hash] The hash of connection properties.
-  # @param prefix [String] The prefix to filter keys (e.g., "IP4.ADDRESS").
-  # @return [Array<String>, nil] An array of values, or `nil` if no values are found.
-  #
-  # Example:
-  # Input:
-  #   data = {
-  #     "IP4.ADDRESS[1]" => "192.168.1.100/24",
-  #     "IP4.ADDRESS[2]" => "192.168.1.101/24"
-  #   }
-  #   prefix = "IP4.ADDRESS"
-  # Output:
-  #   ["192.168.1.100/24", "192.168.1.101/24"]
-  #
-  def extract_addresses(data, prefix)
-    addresses = data
-                .select { |key, _| key.start_with?(prefix) }
-                .sort_by { |key, _| key[%r{\[(\d+)\]\z}, 1].to_i }
-                .map { |_, value| value }
-    addresses.empty? ? nil : addresses
   end
 
   # Executes the `nmcli` command with the specified arguments.
