@@ -32,7 +32,7 @@ describe :nm_all_devices, type: :fact do
           'con_uuid' => 'uuid-1',
           'con_path' => '/dbus/con0',
         },
-      }
+      },
     )
   end
 

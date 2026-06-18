@@ -35,7 +35,7 @@ describe :nm_all_connections, type: :fact do
           'active_path' => '/active/1',
           'filename' => '/etc/foo.nmconnection',
         },
-      }
+      },
     )
   end
 
@@ -100,7 +100,7 @@ describe :nm_all_connections, type: :fact do
         'address' => ['2001:db8::1/64'],
         'dns' => ['2001:4860:4860::8888', '2001:4860:4860::8844'],
         'gateway' => 'fe80::1',
-      }
+      },
     )
   end
 end

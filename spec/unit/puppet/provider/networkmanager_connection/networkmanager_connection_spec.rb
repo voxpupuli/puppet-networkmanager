@@ -23,13 +23,13 @@ RSpec.describe Puppet::Provider::NetworkmanagerConnection::NetworkmanagerConnect
         {
           name: 'foo',
           ensure: 'present',
-        }
+        },
       )
       allow(provider).to receive(:fetch_connection_data).with(context, 'bar').and_return(
         {
           name: 'bar',
           ensure: 'present',
-        }
+        },
       )
 
       expect(provider.get(context, nil)).to eq [
@@ -49,7 +49,7 @@ RSpec.describe Puppet::Provider::NetworkmanagerConnection::NetworkmanagerConnect
         {
           name: 'foo',
           ensure: 'present',
-        }
+        },
       )
 
       expect(provider.get(context, ['foo', nil, ''])).to eq [
@@ -76,86 +76,86 @@ RSpec.describe Puppet::Provider::NetworkmanagerConnection::NetworkmanagerConnect
 
     it 'normalizes general state values into the type enum' do
       allow(provider).to receive(:nmcli).with('-t', 'connection', 'show', 'foo').and_return(
-        "GENERAL.STATE:100 (connected)\nconnection.type:wifi\nconnection.uuid:123\n"
+        "GENERAL.STATE:100 (connected)\nconnection.type:wifi\nconnection.uuid:123\n",
       )
 
       expect(provider.get(context, 'foo')).to eq([
-                                   {
-                                     ensure: 'present',
-                                     name: 'foo',
-                                     type: 'wifi',
-                                     device: nil,
-                                     ipv4_method: nil,
-                                     ipv4_addresses: nil,
-                                     ipv4_dns: nil,
-                                     ipv4_gateway: nil,
-                                     ipv4_routes: [],
-                                     ipv6_method: nil,
-                                     ipv6_addresses: nil,
-                                     ipv6_dns: nil,
-                                     ipv6_gateway: nil,
-                                     ipv6_routes: [],
-                                     general_state: 'connected',
-                                   },
-                                 ])
+                                                   {
+                                                     ensure: 'present',
+                                                     name: 'foo',
+                                                     type: 'wifi',
+                                                     device: nil,
+                                                     ipv4_method: nil,
+                                                     ipv4_addresses: nil,
+                                                     ipv4_dns: nil,
+                                                     ipv4_gateway: nil,
+                                                     ipv4_routes: [],
+                                                     ipv6_method: nil,
+                                                     ipv6_addresses: nil,
+                                                     ipv6_dns: nil,
+                                                     ipv6_gateway: nil,
+                                                     ipv6_routes: [],
+                                                     general_state: 'connected',
+                                                   },
+                                                 ])
     end
 
     it 'reads addresses and dns from connection profile fields' do
       allow(provider).to receive(:nmcli).with('-t', 'connection', 'show', 'foo').and_return(
-        "ipv4.addresses:192.168.1.10/24,192.168.1.11/24\nipv4.dns:1.1.1.1,8.8.8.8\n"
+        "ipv4.addresses:192.168.1.10/24,192.168.1.11/24\nipv4.dns:1.1.1.1,8.8.8.8\n",
       )
 
       expect(provider.get(context, 'foo')).to eq([
-                                   {
-                                     ensure: 'present',
-                                     name: 'foo',
-                                     type: nil,
-                                     device: nil,
-                                     ipv4_method: nil,
-                                     ipv4_addresses: ['192.168.1.10/24', '192.168.1.11/24'],
-                                     ipv4_dns: ['1.1.1.1', '8.8.8.8'],
-                                     ipv4_gateway: nil,
-                                     ipv4_routes: [],
-                                     ipv6_method: nil,
-                                     ipv6_addresses: nil,
-                                     ipv6_dns: nil,
-                                     ipv6_gateway: nil,
-                                     ipv6_routes: [],
-                                     general_state: 'unknown',
-                                   },
-                                 ])
+                                                   {
+                                                     ensure: 'present',
+                                                     name: 'foo',
+                                                     type: nil,
+                                                     device: nil,
+                                                     ipv4_method: nil,
+                                                     ipv4_addresses: ['192.168.1.10/24', '192.168.1.11/24'],
+                                                     ipv4_dns: ['1.1.1.1', '8.8.8.8'],
+                                                     ipv4_gateway: nil,
+                                                     ipv4_routes: [],
+                                                     ipv6_method: nil,
+                                                     ipv6_addresses: nil,
+                                                     ipv6_dns: nil,
+                                                     ipv6_gateway: nil,
+                                                     ipv6_routes: [],
+                                                     general_state: 'unknown',
+                                                   },
+                                                 ])
     end
 
     it 'reads routes from connection profile fields' do
       allow(provider).to receive(:nmcli).with('-t', 'connection', 'show', 'foo').and_return(
         "ipv4.routes:10.10.0.0/16 10.0.2.1 100,10.20.0.0/16 10.0.2.1 200\n" \
-        "ipv6.routes:2001:db8:10::/64 2001:db8::1 100\n"
+        "ipv6.routes:2001:db8:10::/64 2001:db8::1 100\n",
       )
 
       expect(provider.get(context, 'foo')).to eq([
-                                   {
-                                     ensure: 'present',
-                                     name: 'foo',
-                                     type: nil,
-                                     device: nil,
-                                     ipv4_method: nil,
-                                     ipv4_addresses: nil,
-                                     ipv4_dns: nil,
-                                     ipv4_gateway: nil,
-                                     ipv4_routes: [
-                                       { destination: '10.10.0.0/16', next_hop: '10.0.2.1', metric: 100 },
-                                       { destination: '10.20.0.0/16', next_hop: '10.0.2.1', metric: 200 },
-                                     ],
-                                     ipv6_method: nil,
-                                     ipv6_addresses: nil,
-                                     ipv6_dns: nil,
-                                     ipv6_gateway: nil,
-                                     ipv6_routes: [
-                                       { destination: '2001:db8:10::/64', next_hop: '2001:db8::1', metric: 100 },
-                                     ],
-                                     general_state: 'unknown',
-                                   },
-                                 ])
+                                                   {
+                                                     ensure: 'present',
+                                                     name: 'foo',
+                                                     type: nil,
+                                                     device: nil,
+                                                     ipv4_method: nil,
+                                                     ipv4_addresses: nil,
+                                                     ipv4_dns: nil,
+                                                     ipv4_gateway: nil,
+                                                     ipv4_routes: [
+                                                       { destination: '10.10.0.0/16', next_hop: '10.0.2.1', metric: 100 },
+                                                       { destination: '10.20.0.0/16', next_hop: '10.0.2.1', metric: 200 },
+                                                     ],
+                                                     ipv6_method: nil,
+                                                     ipv6_addresses: nil,
+                                                     ipv6_dns: nil,
+                                                     ipv6_gateway: nil,
+                                                     ipv6_routes: [
+                                                       { destination: '2001:db8:10::/64', next_hop: '2001:db8::1', metric: 100 },
+                                                     ],
+                                                     general_state: 'unknown',
+                                                   },
+                                                 ])
     end
   end
 

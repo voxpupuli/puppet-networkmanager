@@ -66,19 +66,21 @@ class Puppet::Provider::NetworkmanagerConnection::NetworkmanagerConnection < Pup
 
   private
 
-  PROPERTY_MAP = {
-    device: 'connection.interface-name',
-    ipv4_method: 'ipv4.method',
-    ipv4_addresses: 'ipv4.addresses',
-    ipv4_dns: 'ipv4.dns',
-    ipv4_gateway: 'ipv4.gateway',
-    ipv4_routes: 'ipv4.routes',
-    ipv6_method: 'ipv6.method',
-    ipv6_addresses: 'ipv6.addresses',
-    ipv6_dns: 'ipv6.dns',
-    ipv6_gateway: 'ipv6.gateway',
-    ipv6_routes: 'ipv6.routes',
-  }.freeze unless const_defined?(:PROPERTY_MAP, false)
+  unless const_defined?(:PROPERTY_MAP, false)
+    PROPERTY_MAP = {
+      device: 'connection.interface-name',
+      ipv4_method: 'ipv4.method',
+      ipv4_addresses: 'ipv4.addresses',
+      ipv4_dns: 'ipv4.dns',
+      ipv4_gateway: 'ipv4.gateway',
+      ipv4_routes: 'ipv4.routes',
+      ipv6_method: 'ipv6.method',
+      ipv6_addresses: 'ipv6.addresses',
+      ipv6_dns: 'ipv6.dns',
+      ipv6_gateway: 'ipv6.gateway',
+      ipv6_routes: 'ipv6.routes',
+    }.freeze
+  end
 
   def create_connection(context, name, resource)
     args = ['connection', 'add', 'con-name', name, 'type', resource.fetch(:type)]
@@ -122,11 +124,9 @@ class Puppet::Provider::NetworkmanagerConnection::NetworkmanagerConnection < Pup
     return if routes.empty?
 
     gateway = resource[:"ipv#{family}_gateway"]
-    default_destination = (family == 4 ? '0.0.0.0/0' : '::/0')
+    default_destination = ((family == 4) ? '0.0.0.0/0' : '::/0')
 
-    if gateway && routes.any? { |route| same_network?(route_value(route, :destination), default_destination) }
-      raise Puppet::Error, "Connection '#{name}' declares both ipv#{family}_gateway and a default route in ipv#{family}_routes"
-    end
+    raise Puppet::Error, "Connection '#{name}' declares both ipv#{family}_gateway and a default route in ipv#{family}_routes" if gateway && routes.any? { |route| same_network?(route_value(route, :destination), default_destination) }
 
     connected_networks = Array(resource[:"ipv#{family}_addresses"]).map { |address| canonical_network(address) }
     duplicate = routes.find do |route|
@@ -174,9 +174,7 @@ class Puppet::Provider::NetworkmanagerConnection::NetworkmanagerConnection < Pup
   def normalize_setting_value(value)
     return '' if value.nil?
 
-    if value.is_a?(Array) && value.first.is_a?(Hash)
-      return value.map { |entry| format_route_entry(entry) }.compact.join(',')
-    end
+    return value.map { |entry| format_route_entry(entry) }.compact.join(',') if value.is_a?(Array) && value.first.is_a?(Hash)
 
     value.is_a?(Array) ? value.join(',') : value.to_s
   end
@@ -206,12 +204,11 @@ class Puppet::Provider::NetworkmanagerConnection::NetworkmanagerConnection < Pup
   def parse_routes(value)
     return [] if value.nil? || value.strip.empty?
 
-    routes = value.split(',').map(&:strip).reject(&:empty?).map { |route| parse_route_entry(route) }.compact
-    routes
+    value.split(',').map(&:strip).reject(&:empty?).map { |route| parse_route_entry(route) }.compact
   end
 
   def parse_route_entry(route)
-    parts = route.split(/\s+/)
+    parts = route.split(%r{\s+})
     return nil if parts.empty?
 
     parsed = { destination: parts[0] }
@@ -226,7 +223,7 @@ class Puppet::Provider::NetworkmanagerConnection::NetworkmanagerConnection < Pup
     return 'unknown' if value.nil? || value.strip.empty?
 
     normalized = value.downcase.strip
-    normalized = normalized[/\(([^)]+)\)/, 1] || normalized
+    normalized = normalized[%r{\(([^)]+)\)}, 1] || normalized
 
     case normalized
     when 'activated', 'unknown', 'down', 'connecting', 'connected', 'disconnecting'
@@ -321,7 +318,7 @@ class Puppet::Provider::NetworkmanagerConnection::NetworkmanagerConnection < Pup
   def extract_addresses(data, prefix)
     addresses = data
                 .select { |key, _| key.start_with?(prefix) }
-                .sort_by { |key, _| key[/\[(\d+)\]\z/, 1].to_i }
+                .sort_by { |key, _| key[%r{\[(\d+)\]\z}, 1].to_i }
                 .map { |_, value| value }
     addresses.empty? ? nil : addresses
   end
