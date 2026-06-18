@@ -92,17 +92,4 @@ class networkmanager (
   include networkmanager::install
   include networkmanager::config
   include networkmanager::service
-
-  # vagrant-specific configuration for testing purposes
-  networkmanager_connection { 'enp0s8':
-    ensure         => 'present',
-    type           => '802-3-ethernet',
-    device         => 'enp0s8',
-    ipv4_method    => 'manual',
-    ipv4_addresses => ['10.0.2.15/24'],
-    ipv4_dns       => ['8.8.8.8'],
-    ipv4_gateway   => '10.0.2.2',
-    ipv6_method    => 'ignore',
-    reapply        => true,
-  }
 }
