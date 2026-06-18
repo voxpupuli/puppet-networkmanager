@@ -6,7 +6,7 @@ describe 'networkmanager_connection resource' do
   let(:test_profile) do
     {
       connection: 'puppet-acceptance',
-      interface: 'br-puppet-acceptance',
+      interface: 'br-test',
     }
   end
 
@@ -88,6 +88,8 @@ describe 'networkmanager_connection resource' do
 
   context 'when creating a bridge profile' do
     it 'creates the requested profile idempotently' do
+      expect(test_profile[:interface].length).to be <= 15
+
       apply_manifest(initial_manifest, catch_failures: true)
       apply_manifest(initial_manifest, catch_changes: true)
 
