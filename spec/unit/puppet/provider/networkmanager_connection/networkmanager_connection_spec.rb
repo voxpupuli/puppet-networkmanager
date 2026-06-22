@@ -141,8 +141,8 @@ RSpec.describe Puppet::Provider::NetworkmanagerConnection::NetworkmanagerConnect
     it 'reads routes from connection profile fields' do
       allow(provider).to receive(:list_connections).and_return(['foo'])
       allow(provider).to receive(:nmcli).with('-t', 'connection', 'show', 'foo').and_return(
-        "ipv4.routes:10.10.0.0/16 10.0.2.1 100,10.20.0.0/16 10.0.2.1 200\n" \
-        "ipv6.routes:2001:db8:10::/64 2001:db8::1 100\n",
+        "ipv4.routes:10.10.0.0/16 10.0.2.1 100 src=10.0.2.10,10.20.0.0/16 10.0.2.1 200\n" \
+        "ipv6.routes:2001:db8:10::/64 2001:db8::1 100 src=2001:db8::10\n",
       )
 
       expect(provider.get(context, 'foo')).to eq([
@@ -156,7 +156,7 @@ RSpec.describe Puppet::Provider::NetworkmanagerConnection::NetworkmanagerConnect
                                                      ipv4_dns: nil,
                                                      ipv4_gateway: nil,
                                                      ipv4_routes: [
-                                                       { 'destination' => '10.10.0.0/16', 'next_hop' => '10.0.2.1', 'metric' => 100 },
+                                                       { 'destination' => '10.10.0.0/16', 'next_hop' => '10.0.2.1', 'metric' => 100, 'source' => '10.0.2.10' },
                                                        { 'destination' => '10.20.0.0/16', 'next_hop' => '10.0.2.1', 'metric' => 200 },
                                                      ],
                                                      ipv6_method: nil,
@@ -164,7 +164,7 @@ RSpec.describe Puppet::Provider::NetworkmanagerConnection::NetworkmanagerConnect
                                                      ipv6_dns: nil,
                                                      ipv6_gateway: nil,
                                                      ipv6_routes: [
-                                                       { 'destination' => '2001:db8:10::/64', 'next_hop' => '2001:db8::1', 'metric' => 100 },
+                                                       { 'destination' => '2001:db8:10::/64', 'next_hop' => '2001:db8::1', 'metric' => 100, 'source' => '2001:db8::10' },
                                                      ],
                                                      general_state: 'unknown',
                                                    },
@@ -246,8 +246,8 @@ RSpec.describe Puppet::Provider::NetworkmanagerConnection::NetworkmanagerConnect
     it 'updates a connection when routes are provided' do
       expect(context).to receive(:notice).with("Updating 'office'")
       expect(provider).to receive(:nmcli).with('connection', 'modify', 'office',
-                                               'ipv4.routes', '10.10.0.0/16 10.0.2.1 100',
-                                               'ipv6.routes', '2001:db8:10::/64 2001:db8::1 100')
+                                               'ipv4.routes', '10.10.0.0/16 10.0.2.1 100 src=10.0.2.10',
+                                               'ipv6.routes', '2001:db8:10::/64 2001:db8::1 100 src=2001:db8::10')
 
       provider.set(context, {
                      'office' => {
@@ -259,14 +259,67 @@ RSpec.describe Puppet::Provider::NetworkmanagerConnection::NetworkmanagerConnect
                          name: 'office',
                          ensure: 'present',
                          ipv4_routes: [
-                           { destination: '10.10.0.0/16', next_hop: '10.0.2.1', metric: 100 },
+                           { destination: '10.10.0.0/16', next_hop: '10.0.2.1', metric: 100, source: '10.0.2.10' },
                          ],
                          ipv6_routes: [
-                           { destination: '2001:db8:10::/64', next_hop: '2001:db8::1', metric: 100 },
+                           { destination: '2001:db8:10::/64', next_hop: '2001:db8::1', metric: 100, source: '2001:db8::10' },
                          ],
                        },
                      },
                    })
+    end
+
+    it 'adds an address and uses it as the preferred source for the default route' do
+      expect(context).to receive(:notice).with("Updating 'lan0'")
+      expect(provider).to receive(:nmcli).with('connection', 'modify', 'lan0',
+                                               'ipv4.method', 'manual',
+                                               'ipv4.addresses', '192.168.1.10/24,192.0.2.10/24',
+                                               'ipv4.routes', '0.0.0.0/0 192.168.1.1 src=192.168.1.10')
+
+      provider.set(context, {
+                     'lan0' => {
+                       is: {
+                         name: 'lan0',
+                         ensure: 'present',
+                       },
+                       should: {
+                         name: 'lan0',
+                         ensure: 'present',
+                         ipv4_method: 'manual',
+                         ipv4_addresses: ['192.168.1.10/24', '192.0.2.10/24'],
+                         ipv4_routes: [
+                           {
+                             destination: '0.0.0.0/0',
+                             next_hop: '192.168.1.1',
+                             source: '192.168.1.10',
+                           },
+                         ],
+                       },
+                     },
+                   })
+    end
+
+    it 'rejects a route source from the wrong address family' do
+      expect(context).to receive(:notice).with("Updating 'office'")
+      expect(provider).not_to receive(:nmcli)
+
+      expect do
+        provider.set(context, {
+                       'office' => {
+                         is: {
+                           name: 'office',
+                           ensure: 'present',
+                         },
+                         should: {
+                           name: 'office',
+                           ensure: 'present',
+                           ipv6_routes: [
+                             { destination: '2001:db8:10::/64', source: '192.0.2.10' },
+                           ],
+                         },
+                       },
+                     })
+      end.to raise_error(Puppet::Error, %r{invalid ipv6 route source '192.0.2.10'})
     end
 
     it 'rejects an IPv4 connected network in the static routes' do

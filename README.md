@@ -108,6 +108,7 @@ networkmanager_connection { 'lan0':
       destination => '198.51.100.0/24',
       next_hop    => '192.0.2.254',
       metric      => 100,
+      source      => '192.0.2.10',
     },
     {
       destination => '203.0.113.0/24',
@@ -120,8 +121,9 @@ networkmanager_connection { 'lan0':
 }
 ```
 
-The `next_hop` and `metric` fields are optional. The metric applies to the
-individual route.
+The `next_hop`, `metric`, and `source` fields are optional. The metric applies
+to the individual route. `source` sets NetworkManager's `src` route attribute
+and selects the preferred source address for traffic using that route.
 
 ### IPv6 connection and routes
 
@@ -140,6 +142,7 @@ networkmanager_connection { 'ipv6-lan':
       destination => '2001:db8:2::/64',
       next_hop    => '2001:db8:1::fe',
       metric      => 100,
+      source      => '2001:db8:1::10',
     },
   ],
   reapply        => true,

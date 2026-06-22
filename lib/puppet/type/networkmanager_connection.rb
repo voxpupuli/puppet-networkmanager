@@ -66,8 +66,8 @@ Puppet::ResourceApi.register_type(
     },
 
     ipv4_routes: {
-      type: 'Optional[Array[Struct[{destination => Pattern[/\\A\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\/\\d{1,2}\\z/], Optional[next_hop] => Pattern[/\\A\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\z/], Optional[metric] => Integer[0]}]]]',
-      desc: 'Additional static IPv4 routes. Do not declare the connected network from ipv4_addresses or a default route already represented by ipv4_gateway.',
+      type: 'Optional[Array[Struct[{destination => Pattern[/\\A\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\/\\d{1,2}\\z/], Optional[next_hop] => Pattern[/\\A\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\z/], Optional[metric] => Integer[0], Optional[source] => Pattern[/\\A\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\z/]}]]]',
+      desc: 'Additional static IPv4 routes with optional preferred source addresses. Do not declare the connected network from ipv4_addresses or a default route already represented by ipv4_gateway.',
     },
 
     ipv6_method: {
@@ -92,8 +92,8 @@ Puppet::ResourceApi.register_type(
     },
 
     ipv6_routes: {
-      type: 'Optional[Array[Struct[{destination => String[1], Optional[next_hop] => String[1], Optional[metric] => Integer[0]}]]]',
-      desc: 'Additional static IPv6 routes. Do not declare the connected network from ipv6_addresses or a default route already represented by ipv6_gateway.',
+      type: 'Optional[Array[Struct[{destination => String[1], Optional[next_hop] => String[1], Optional[metric] => Integer[0], Optional[source] => String[1]}]]]',
+      desc: 'Additional static IPv6 routes with optional preferred source addresses. Do not declare the connected network from ipv6_addresses or a default route already represented by ipv6_gateway.',
     },
 
     general_state: {
