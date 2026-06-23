@@ -20,10 +20,18 @@
 #
 Facter.add(:nm_active_connections) do
   confine kernel: 'Linux'
+  confine { Facter::Core::Execution.which('nmcli') }
 
   setcode do
-    Facter.value(:nm_all_connections).select do |_, connection|
-      connection['active'] && connection['state'] == 'activated'
+    connections = Facter.value(:nm_all_connections)
+    next nil if connections.nil?
+
+    connections.each_with_object({}) do |(name, connection), active_connections|
+      active = connection['active'] || connection[:active]
+      state = connection['state'] || connection[:state]
+      next unless active && state == 'activated'
+
+      active_connections[name] = connection.transform_keys(&:to_s)
     end
   end
 end

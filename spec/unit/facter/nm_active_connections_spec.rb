@@ -7,43 +7,59 @@ require 'facter/nm_active_connections'
 describe :nm_active_connections, type: :fact do
   subject(:fact) { Facter.fact(:nm_active_connections) }
 
-  # Mocking Facts
-  # You will most likely need to mock other facts if your custom fact relies up on them
-  # You can mock a existing core fact via:
-  #  allow(Facter.fact(:fqdn)).to receive(:value).and_return('test.example.com')
-  #  allow(Facter).to receive(:value).with(:fqdn).and_return('test.example.com')
-  # This all depends on how you utilize it in the fact code
-
-  # If you need to Mock a custom fact or non core fact you will first need to add that fact
-  # by requiring the facter file ie. require facter/ec2_metadata
-  # Or via code in the before each block:
-  # before :each do
-  #   Facter.add(:ec2_metadata) {}
-  # Once the custom fact is added, you can mock like
-  # allow(Facter.fact(:ec2_metadata)).to receive(:value).and_return({'42'})
-  # allow(Facter).to receive(:value).with(:fqdn).and_return('test.example.com')
-  # This all depends on how you utilize it in the fact code
-  # This mock will go inside your test block or the before each block
-
-  # Mocking confine example
-  # confine kernel: 'Linux' (Located in Fact)
-  # allow(Facter.fact(:kernel)).to receive(:value).and_return('Linux')
-
-  # Using and Mocking Exec
-  # You should always use the Facter Exectution method to execute commands on a system
-  # This will allow you to easily mock items as a result
-  # Facter::Core::Execution.execute('uname 2>&1')
-  # allow(Facter::Core::Execution).to receive(:execute).with('uname 2>&1').and_return('Linux')
-
-  before :each do
-    # perform any action that should be run before every test
+  before do
     Facter.clear
-    # Facter.add(:ec2_metadata) {}
-    # allow(Facter).to receive(:value).with(:fqdn).and_return('test.example.com')
-    # allow(Facter.fact(:ec2_metadata)).to receive(:value).and_return({'42'})
+    Facter.add(:kernel) { setcode { 'Linux' } }
+    allow(Facter).to receive(:value).and_call_original
+    allow(Facter).to receive(:value).with(:kernel).and_return('Linux')
+    allow(Facter.fact(:kernel)).to receive(:value).and_return('Linux')
+    allow(Facter::Core::Execution).to receive(:which).with('nmcli').and_return('/usr/bin/nmcli')
   end
 
-  it 'returns a value' do
-    expect(fact.value).to eq('hello facter')
+  it 'returns only activated and active connections' do
+    allow(Facter).to receive(:value).with(:nm_all_connections).and_return(
+      {
+        'foo' => { active: true, state: 'activated' },
+        'bar' => { active: false, state: 'activated' },
+        'baz' => { active: true, state: 'deactivated' },
+      },
+    )
+
+    expect(fact.value).to eq(
+      {
+        'foo' => { 'active' => true, 'state' => 'activated' },
+      },
+    )
+  end
+
+  it 'handles string-keyed input from nm_all_connections' do
+    allow(Facter).to receive(:value).with(:nm_all_connections).and_return(
+      {
+        'foo' => { 'active' => true, 'state' => 'activated', 'uuid' => '123', 'ipv4' => { 'dns' => ['8.8.8.8'] } },
+      },
+    )
+
+    expect(fact.value).to eq(
+      {
+        'foo' => { 'active' => true, 'state' => 'activated', 'uuid' => '123', 'ipv4' => { 'dns' => ['8.8.8.8'] } },
+      },
+    )
+  end
+
+  it 'returns an empty hash when no connection is active' do
+    allow(Facter).to receive(:value).with(:nm_all_connections).and_return(
+      {
+        'foo' => { active: true, state: 'deactivated' },
+        'bar' => { active: false, state: 'activated' },
+      },
+    )
+
+    expect(fact.value).to eq({})
+  end
+
+  it 'returns nil when nm_all_connections fails' do
+    allow(Facter).to receive(:value).with(:nm_all_connections).and_return(nil)
+
+    expect(fact.value).to be_nil
   end
 end

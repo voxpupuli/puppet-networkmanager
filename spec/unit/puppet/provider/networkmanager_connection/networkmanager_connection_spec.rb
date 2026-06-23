@@ -2,7 +2,7 @@
 
 require 'spec_helper'
 
-ensure_module_defined('Puppet::Provider::NetworkmanagerConnection')
+Puppet::Provider.const_set(:NetworkmanagerConnection, Module.new) unless Puppet::Provider.const_defined?(:NetworkmanagerConnection, false)
 require 'puppet/provider/networkmanager_connection/networkmanager_connection'
 
 RSpec.describe Puppet::Provider::NetworkmanagerConnection::NetworkmanagerConnection do
@@ -10,10 +10,29 @@ RSpec.describe Puppet::Provider::NetworkmanagerConnection::NetworkmanagerConnect
 
   let(:context) { instance_double('Puppet::ResourceApi::BaseContext', 'context') }
 
+  before do
+    allow(context).to receive(:debug)
+    allow(context).to receive(:err)
+    allow(context).to receive(:notice)
+  end
+
   describe '#get' do
-    it 'processes resources' do
-      expect(context).to receive(:debug).with('Returning pre-canned example data')
-      expect(provider.get(context)).to eq [
+    it 'returns all connections when no filter is provided' do
+      allow(provider).to receive(:list_connections).and_return(%w[foo bar])
+      allow(provider).to receive(:fetch_connection_data).with(context, 'foo').and_return(
+        {
+          name: 'foo',
+          ensure: 'present',
+        },
+      )
+      allow(provider).to receive(:fetch_connection_data).with(context, 'bar').and_return(
+        {
+          name: 'bar',
+          ensure: 'present',
+        },
+      )
+
+      expect(provider.get(context, nil)).to eq [
         {
           name: 'foo',
           ensure: 'present',
@@ -24,29 +43,442 @@ RSpec.describe Puppet::Provider::NetworkmanagerConnection::NetworkmanagerConnect
         },
       ]
     end
-  end
 
-  describe 'create(context, name, should)' do
-    it 'creates the resource' do
-      expect(context).to receive(:notice).with(%r{\ACreating 'a'})
+    it 'normalizes and filters requested names' do
+      allow(provider).to receive(:list_connections).and_return(['foo'])
+      allow(provider).to receive(:fetch_connection_data).with(context, 'foo').and_return(
+        {
+          name: 'foo',
+          ensure: 'present',
+        },
+      )
 
-      provider.create(context, 'a', name: 'a', ensure: 'present')
+      expect(provider.get(context, ['foo', nil, ''])).to eq [
+        {
+          name: 'foo',
+          ensure: 'present',
+        },
+      ]
+    end
+
+    it 'returns no resource without querying details when a requested connection is absent' do
+      allow(provider).to receive(:list_connections).and_return(['existing'])
+      expect(provider).not_to receive(:fetch_connection_data)
+      expect(context).not_to receive(:err)
+
+      expect(provider.get(context, 'missing')).to eq([])
+    end
+
+    it 'returns an empty array when listing connections fails' do
+      allow(provider).to receive(:list_connections).and_raise(Puppet::ExecutionFailure, 'nmcli failed')
+      expect(context).to receive(:err).with(%r{nmcli failed})
+
+      expect(provider.get(context, nil)).to eq([])
+    end
+
+    it 'logs when fetching a single connection fails' do
+      allow(provider).to receive(:list_connections).and_return(['foo'])
+      allow(provider).to receive(:nmcli).with('-t', 'connection', 'show', 'foo').and_raise(Puppet::ExecutionFailure, 'connection missing')
+      expect(context).to receive(:err).with(%r{Error fetching NetworkManager connection 'foo': connection missing})
+
+      expect(provider.get(context, 'foo')).to eq([])
+    end
+
+    it 'normalizes general state values into the type enum' do
+      allow(provider).to receive(:list_connections).and_return(['foo'])
+      allow(provider).to receive(:nmcli).with('-t', 'connection', 'show', 'foo').and_return(
+        "GENERAL.STATE:100 (connected)\nconnection.type:wifi\nconnection.uuid:123\n",
+      )
+
+      expect(provider.get(context, 'foo')).to eq([
+                                                   {
+                                                     ensure: 'present',
+                                                     name: 'foo',
+                                                     type: 'wifi',
+                                                     device: nil,
+                                                     ipv4_method: nil,
+                                                     ipv4_addresses: nil,
+                                                     ipv4_dns: nil,
+                                                     ipv4_gateway: nil,
+                                                     ipv4_routes: [],
+                                                     ipv6_method: nil,
+                                                     ipv6_addresses: nil,
+                                                     ipv6_dns: nil,
+                                                     ipv6_gateway: nil,
+                                                     ipv6_routes: [],
+                                                     general_state: 'connected',
+                                                   },
+                                                 ])
+    end
+
+    it 'reads addresses and dns from connection profile fields' do
+      allow(provider).to receive(:list_connections).and_return(['foo'])
+      allow(provider).to receive(:nmcli).with('-t', 'connection', 'show', 'foo').and_return(
+        "ipv4.addresses:192.168.1.10/24,192.168.1.11/24\nipv4.dns:1.1.1.1,8.8.8.8\n",
+      )
+
+      expect(provider.get(context, 'foo')).to eq([
+                                                   {
+                                                     ensure: 'present',
+                                                     name: 'foo',
+                                                     type: nil,
+                                                     device: nil,
+                                                     ipv4_method: nil,
+                                                     ipv4_addresses: ['192.168.1.10/24', '192.168.1.11/24'],
+                                                     ipv4_dns: ['1.1.1.1', '8.8.8.8'],
+                                                     ipv4_gateway: nil,
+                                                     ipv4_routes: [],
+                                                     ipv6_method: nil,
+                                                     ipv6_addresses: nil,
+                                                     ipv6_dns: nil,
+                                                     ipv6_gateway: nil,
+                                                     ipv6_routes: [],
+                                                     general_state: 'unknown',
+                                                   },
+                                                 ])
+    end
+
+    it 'reads routes from connection profile fields' do
+      allow(provider).to receive(:list_connections).and_return(['foo'])
+      allow(provider).to receive(:nmcli).with('-t', 'connection', 'show', 'foo').and_return(
+        "ipv4.routes:10.10.0.0/16 10.0.2.1 100,10.20.0.0/16 10.0.2.1 200\n" \
+        "ipv6.routes:2001:db8:10::/64 2001:db8::1 100\n",
+      )
+
+      expect(provider.get(context, 'foo')).to eq([
+                                                   {
+                                                     ensure: 'present',
+                                                     name: 'foo',
+                                                     type: nil,
+                                                     device: nil,
+                                                     ipv4_method: nil,
+                                                     ipv4_addresses: nil,
+                                                     ipv4_dns: nil,
+                                                     ipv4_gateway: nil,
+                                                     ipv4_routes: [
+                                                       { 'destination' => '10.10.0.0/16', 'next_hop' => '10.0.2.1', 'metric' => 100 },
+                                                       { 'destination' => '10.20.0.0/16', 'next_hop' => '10.0.2.1', 'metric' => 200 },
+                                                     ],
+                                                     ipv6_method: nil,
+                                                     ipv6_addresses: nil,
+                                                     ipv6_dns: nil,
+                                                     ipv6_gateway: nil,
+                                                     ipv6_routes: [
+                                                       { 'destination' => '2001:db8:10::/64', 'next_hop' => '2001:db8::1', 'metric' => 100 },
+                                                     ],
+                                                     general_state: 'unknown',
+                                                   },
+                                                 ])
     end
   end
 
-  describe 'update(context, name, should)' do
-    it 'updates the resource' do
-      expect(context).to receive(:notice).with(%r{\AUpdating 'foo'})
+  describe '#list_connections' do
+    it 'filters blank entries from nmcli output' do
+      allow(provider).to receive(:nmcli).with('-t', '-f', 'name', 'connection', 'show').and_return("foo\n\n bar \n\n")
 
-      provider.update(context, 'foo', name: 'foo', ensure: 'present')
+      expect(provider.send(:list_connections)).to eq(%w[foo bar])
     end
   end
 
-  describe 'delete(context, name)' do
-    it 'deletes the resource' do
-      expect(context).to receive(:notice).with(%r{\ADeleting 'foo'})
+  describe '#set' do
+    it 'creates a connection when resource is absent' do
+      expect(context).to receive(:notice).with("Creating 'home'")
+      expect(provider).to receive(:nmcli).with('connection', 'add', 'con-name', 'home', 'type', 'wifi', 'ifname', 'wlan0')
+      expect(provider).to receive(:nmcli).with('connection', 'modify', 'home',
+                                               'connection.interface-name', 'wlan0',
+                                               'ipv4.method', 'auto')
 
-      provider.delete(context, 'foo')
+      provider.set(context, {
+                     'home' => {
+                       is: {},
+                       should: {
+                         name: 'home',
+                         ensure: 'present',
+                         type: 'wifi',
+                         device: 'wlan0',
+                         ipv4_method: 'auto',
+                       },
+                     },
+                   })
+    end
+
+    it 'creates a connection when Puppet represents absent as a symbol' do
+      expect(context).to receive(:notice).with("Creating 'home'")
+      expect(provider).to receive(:nmcli).with('connection', 'add', 'con-name', 'home', 'type', 'wifi')
+
+      provider.set(context, {
+                     'home' => {
+                       is: {
+                         name: 'home',
+                         ensure: :absent,
+                       },
+                       should: {
+                         name: 'home',
+                         ensure: :present,
+                         type: 'wifi',
+                       },
+                     },
+                   })
+    end
+
+    it 'updates a connection when resource exists' do
+      expect(context).to receive(:notice).with("Updating 'office'")
+      expect(provider).to receive(:nmcli).with('connection', 'modify', 'office',
+                                               'ipv4.addresses', '10.0.0.10/24,10.0.0.11/24',
+                                               'ipv4.dns', '1.1.1.1,8.8.8.8')
+
+      provider.set(context, {
+                     'office' => {
+                       is: {
+                         name: 'office',
+                         ensure: 'present',
+                       },
+                       should: {
+                         name: 'office',
+                         ensure: 'present',
+                         ipv4_addresses: ['10.0.0.10/24', '10.0.0.11/24'],
+                         ipv4_dns: ['1.1.1.1', '8.8.8.8'],
+                       },
+                     },
+                   })
+    end
+
+    it 'updates a connection when routes are provided' do
+      expect(context).to receive(:notice).with("Updating 'office'")
+      expect(provider).to receive(:nmcli).with('connection', 'modify', 'office',
+                                               'ipv4.routes', '10.10.0.0/16 10.0.2.1 100',
+                                               'ipv6.routes', '2001:db8:10::/64 2001:db8::1 100')
+
+      provider.set(context, {
+                     'office' => {
+                       is: {
+                         name: 'office',
+                         ensure: 'present',
+                       },
+                       should: {
+                         name: 'office',
+                         ensure: 'present',
+                         ipv4_routes: [
+                           { destination: '10.10.0.0/16', next_hop: '10.0.2.1', metric: 100 },
+                         ],
+                         ipv6_routes: [
+                           { destination: '2001:db8:10::/64', next_hop: '2001:db8::1', metric: 100 },
+                         ],
+                       },
+                     },
+                   })
+    end
+
+    it 'rejects an IPv4 connected network in the static routes' do
+      expect(context).to receive(:notice).with("Updating 'office'")
+      expect(provider).not_to receive(:nmcli)
+
+      expect do
+        provider.set(context, {
+                       'office' => {
+                         is: {
+                           name: 'office',
+                           ensure: 'present',
+                         },
+                         should: {
+                           name: 'office',
+                           ensure: 'present',
+                           ipv4_addresses: ['10.0.2.15/24'],
+                           ipv4_routes: [
+                             { destination: '10.0.2.0/24', next_hop: '0.0.0.0', metric: 100 },
+                           ],
+                         },
+                       },
+                     })
+      end.to raise_error(Puppet::Error, %r{connected network '10.0.2.0/24'})
+    end
+
+    it 'rejects an IPv4 default route when an IPv4 gateway is set' do
+      expect(context).to receive(:notice).with("Updating 'office'")
+      expect(provider).not_to receive(:nmcli)
+
+      expect do
+        provider.set(context, {
+                       'office' => {
+                         is: {
+                           name: 'office',
+                           ensure: 'present',
+                         },
+                         should: {
+                           name: 'office',
+                           ensure: 'present',
+                           ipv4_gateway: '10.0.2.2',
+                           ipv4_routes: [
+                             { destination: '0.0.0.0/0', next_hop: '10.0.2.2', metric: 100 },
+                           ],
+                         },
+                       },
+                     })
+      end.to raise_error(Puppet::Error, %r{both ipv4_gateway and a default route})
+    end
+
+    it 'reports an invalid address as a Puppet error' do
+      expect(context).to receive(:notice).with("Updating 'office'")
+      expect(provider).not_to receive(:nmcli)
+
+      expect do
+        provider.set(context, {
+                       'office' => {
+                         is: {
+                           name: 'office',
+                           ensure: 'present',
+                         },
+                         should: {
+                           name: 'office',
+                           ensure: 'present',
+                           ipv4_addresses: ['invalid-address'],
+                           ipv4_routes: [
+                             { destination: '10.0.0.0/24' },
+                           ],
+                         },
+                       },
+                     })
+      end.to raise_error(Puppet::Error, %r{Connection 'office' has invalid ipv4 address 'invalid-address'})
+    end
+
+    it 'reports a missing route destination as a Puppet error' do
+      expect(context).to receive(:notice).with("Updating 'office'")
+      expect(provider).not_to receive(:nmcli)
+
+      expect do
+        provider.set(context, {
+                       'office' => {
+                         is: {
+                           name: 'office',
+                           ensure: 'present',
+                         },
+                         should: {
+                           name: 'office',
+                           ensure: 'present',
+                           ipv4_gateway: '10.0.0.1',
+                           ipv4_routes: [
+                             { metric: 100 },
+                           ],
+                         },
+                       },
+                     })
+      end.to raise_error(Puppet::Error, %r{Connection 'office' has invalid ipv4 route destination})
+    end
+
+    it 'rejects IPv6 connected and gateway routes using the same rules' do
+      expect(context).to receive(:notice).twice
+      expect(provider).not_to receive(:nmcli)
+
+      expect do
+        provider.set(context, {
+                       'connected' => {
+                         is: { name: 'connected', ensure: 'present' },
+                         should: {
+                           name: 'connected',
+                           ensure: 'present',
+                           ipv6_addresses: ['2001:db8::10/64'],
+                           ipv6_routes: [{ destination: '2001:db8::/64' }],
+                         },
+                       },
+                     })
+      end.to raise_error(Puppet::Error, %r{connected network '2001:db8::/64'})
+
+      expect do
+        provider.set(context, {
+                       'default' => {
+                         is: { name: 'default', ensure: 'present' },
+                         should: {
+                           name: 'default',
+                           ensure: 'present',
+                           ipv6_gateway: '2001:db8::1',
+                           ipv6_routes: [{ destination: '::/0', next_hop: '2001:db8::1' }],
+                         },
+                       },
+                     })
+      end.to raise_error(Puppet::Error, %r{both ipv6_gateway and a default route})
+    end
+
+    it 'reapplies the device immediately when requested' do
+      expect(context).to receive(:notice).with("Updating 'office'")
+      expect(provider).to receive(:nmcli).with('connection', 'modify', 'office',
+                                               'connection.interface-name', 'enp0s8',
+                                               'ipv4.method', 'auto')
+      expect(provider).to receive(:nmcli).with('device', 'reapply', 'enp0s8')
+
+      provider.set(context, {
+                     'office' => {
+                       is: {
+                         name: 'office',
+                         ensure: 'present',
+                       },
+                       should: {
+                         name: 'office',
+                         ensure: 'present',
+                         device: 'enp0s8',
+                         ipv4_method: 'auto',
+                         reapply: true,
+                       },
+                     },
+                   })
+    end
+
+    it 'resolves the interface name for reapply when device is omitted' do
+      expect(context).to receive(:notice).with("Updating 'office'")
+      expect(provider).to receive(:nmcli).with('connection', 'modify', 'office',
+                                               'ipv4.method', 'auto')
+      expect(provider).to receive(:nmcli).with('-t', '-f', 'connection.interface-name', 'connection', 'show', 'office').and_return('connection.interface-name:enp0s8')
+      expect(provider).to receive(:nmcli).with('device', 'reapply', 'enp0s8')
+
+      provider.set(context, {
+                     'office' => {
+                       is: {
+                         name: 'office',
+                         ensure: 'present',
+                       },
+                       should: {
+                         name: 'office',
+                         ensure: 'present',
+                         ipv4_method: 'auto',
+                         reapply: true,
+                       },
+                     },
+                   })
+    end
+
+    it 'deletes a connection when ensure is absent' do
+      expect(context).to receive(:notice).with("Deleting 'old'")
+      expect(provider).to receive(:nmcli).with('connection', 'delete', 'old')
+
+      provider.set(context, {
+                     'old' => {
+                       is: {
+                         name: 'old',
+                         ensure: 'present',
+                       },
+                       should: {
+                         name: 'old',
+                         ensure: 'absent',
+                       },
+                     },
+                   })
+    end
+
+    it 'deletes a connection when Puppet represents absent as a symbol' do
+      expect(context).to receive(:notice).with("Deleting 'old'")
+      expect(provider).to receive(:nmcli).with('connection', 'delete', 'old')
+
+      provider.set(context, {
+                     'old' => {
+                       is: {
+                         name: 'old',
+                         ensure: :present,
+                       },
+                       should: {
+                         name: 'old',
+                         ensure: :absent,
+                       },
+                     },
+                   })
     end
   end
 end

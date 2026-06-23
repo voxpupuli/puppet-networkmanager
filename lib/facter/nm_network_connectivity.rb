@@ -10,6 +10,8 @@ Facter.add(:nm_network_connectivity) do
   confine { Facter::Core::Execution.which('nmcli') }
 
   setcode do
-    Facter::Core::Execution.execute('nmcli -c no network connectivity check')
+    Facter::Core::Execution.execute('nmcli -c no network connectivity check').strip
+  rescue StandardError
+    nil
   end
 end

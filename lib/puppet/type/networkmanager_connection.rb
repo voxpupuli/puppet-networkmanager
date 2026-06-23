@@ -4,15 +4,15 @@ require 'puppet/resource_api'
 
 Puppet::ResourceApi.register_type(
   name: 'networkmanager_connection',
-  docs: <<-EOS,
-@summary a networkmanager_connection type
-@example
-networkmanager_connection { 'foo':
-  ensure => 'present',
-}
+  docs: <<~EOS,
+    @summary a networkmanager_connection type
+    @example
+    networkmanager_connection { 'foo':
+      ensure => 'present',
+    }
 
-This type provides Puppet with the capabilities to manage NetworkManager connections.
-EOS
+    This type provides Puppet with the capabilities to manage NetworkManager connections.
+  EOS
   features: ['simple_get_filter'],
   attributes: {
     ensure: {
@@ -22,72 +22,84 @@ EOS
     },
 
     name: {
-      type:    'String',
-      desc:    'The name of the NetworkManager connection.',
+      type: 'String',
+      desc: 'The name of the NetworkManager connection.',
       behaviour: :namevar,
     },
 
     type: {
-      type:    'Enum[ethernet, "802-3-ethernet", loopback, wifi, vpn, bridge, bond, vlan]',
-      desc:    'The type of the connection (e.g., ethernet, wifi, vpn).',
+      type: 'Enum[ethernet, "802-3-ethernet", loopback, wifi, vpn, bridge, bond, vlan]',
+      desc: 'The type of the connection (e.g., ethernet, wifi, vpn).',
     },
 
     device: {
-      type:    'Optional[String]',
-      desc:    'The network interface this connection applies to (optional).',
+      type: 'Optional[String]',
+      desc: 'The network interface this connection applies to (optional).',
+    },
+
+    reapply: {
+      type: 'Boolean',
+      desc: 'Whether to run an immediate runtime reapply on the device after profile changes.',
+      default: false,
+      behaviour: :parameter,
     },
 
     ipv4_method: {
-      type:    'Enum[auto, manual, disabled]',
-      desc:    'The IPv4 configuration method (e.g., auto, manual, disabled).',
+      type:    'Enum[auto, manual, disabled, ignore]',
+      desc:    'The IPv4 configuration method (e.g., auto, manual, disabled, ignore).',
+      default: 'auto',
     },
 
     ipv4_addresses: {
-      type:    'Optional[Array[Pattern[/\\A\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\/\\d{1,2}\\z/]]]',
-      desc:    'An array of static IPv4 addresses (e.g., ["192.168.1.10/24", "192.168.1.11/24"]).',
+      type: 'Optional[Array[Pattern[/\\A\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\/\\d{1,2}\\z/]]]',
+      desc: 'An array of static IPv4 addresses (e.g., ["192.168.1.10/24", "192.168.1.11/24"]).',
     },
 
     ipv4_dns: {
-      type:    'Optional[Array[Pattern[/\\A\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\z/]]]',
-      desc:    'An array of DNS servers (e.g., ["8.8.8.8"]).',
+      type: 'Optional[Array[Pattern[/\\A\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\z/]]]',
+      desc: 'An array of DNS servers (e.g., ["8.8.8.8"]).',
     },
 
     ipv4_gateway: {
-      type:    'Optional[Pattern[/\\A\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\z/]]',
-      desc:    'The IPv4 gateway address (e.g., "192.168.0.1").',
+      type: 'Optional[Pattern[/\\A\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\z/]]',
+      desc: 'The IPv4 gateway address (e.g., "192.168.0.1").',
+    },
+
+    ipv4_routes: {
+      type: 'Optional[Array[Struct[{destination => Pattern[/\\A\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\/\\d{1,2}\\z/], Optional[next_hop] => Pattern[/\\A\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\z/], Optional[metric] => Integer[0]}]]]',
+      desc: 'Additional static IPv4 routes. Do not declare the connected network from ipv4_addresses or a default route already represented by ipv4_gateway.',
     },
 
     ipv6_method: {
-      type:    'Enum[auto, manual, disabled]',
-      desc:    'The IPv6 configuration method (e.g., auto, manual, disabled).',
+      type:    'Enum[auto, manual, disabled, ignore]',
+      desc:    'The IPv6 configuration method (e.g., auto, manual, disabled, ignore).',
+      default: 'auto',
     },
 
     ipv6_addresses: {
-      type:    'Optional[Array[String[1]]]',
-      desc:    'An array of static IPv6 addresses (e.g., ["2001:db8::1/64", "2001:db8::2/64"]).',
+      type: 'Optional[Array[String[1]]]',
+      desc: 'An array of static IPv6 addresses (e.g., ["2001:db8::1/64", "2001:db8::2/64"]).',
     },
 
     ipv6_dns: {
-      type:    'Optional[Array[String[1]]]',
-      desc:    'An array of IPv6 DNS servers (e.g., ["2001:4860:4860::8888"]).',
+      type: 'Optional[Array[String[1]]]',
+      desc: 'An array of IPv6 DNS servers (e.g., ["2001:4860:4860::8888"]).',
     },
 
     ipv6_gateway: {
-      type:    'Optional[String[1]]',
-      desc:    'The IPv6 gateway address (e.g., "2001:db8::1").',
+      type: 'Optional[String[1]]',
+      desc: 'The IPv6 gateway address (e.g., "2001:db8::1").',
+    },
+
+    ipv6_routes: {
+      type: 'Optional[Array[Struct[{destination => String[1], Optional[next_hop] => String[1], Optional[metric] => Integer[0]}]]]',
+      desc: 'Additional static IPv6 routes. Do not declare the connected network from ipv6_addresses or a default route already represented by ipv6_gateway.',
     },
 
     general_state: {
-      type:    'Enum[activated, unknown, down, connecting, connected, disconnecting]',
-      desc:    'The state of the connection (e.g., up, down).',
-      default: 'down',
+      type:      'Enum[activated, unknown, down, connecting, connected, disconnecting]',
+      desc:      'The read-only runtime state of the connection as reported by nmcli.',
+      behaviour: :read_only,
     },
-
-    uuid: {
-      type:    'Optional[String]',
-      desc:    'The UUID of the connection (if applicable).',
-    },
-
-    # ... weitere Attribute
-  }
+  },
 )
