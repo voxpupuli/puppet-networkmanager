@@ -6,10 +6,18 @@ Puppet::ResourceApi.register_type(
   name: 'networkmanager_connection',
   docs: <<~EOS,
     @summary a networkmanager_connection type
-    @example
-    networkmanager_connection { 'foo':
-      ensure => 'present',
-    }
+    @example Create an inactive Ethernet profile with static IPv4 settings
+      networkmanager_connection { 'lab-lan':
+        ensure         => 'present',
+        type           => '802-3-ethernet',
+        device         => 'enp0s8',
+        ipv4_method    => 'manual',
+        ipv4_addresses => ['192.0.2.10/24'],
+        ipv4_gateway   => '192.0.2.1',
+        ipv4_dns       => ['192.0.2.53'],
+        ipv6_method    => 'disabled',
+        reapply        => false,
+      }
 
     This type provides Puppet with the capabilities to manage NetworkManager connections.
   EOS
