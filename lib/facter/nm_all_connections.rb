@@ -22,6 +22,11 @@ require 'puppet_x/networkmanager/facts/all_connections'
 #   - ipv4: A hash with configured IPv4 settings.
 #   - ipv6: A hash with configured IPv6 settings.
 #
+# @example Show all NetworkManager profiles
+#   puppet facts show nm_all_connections
+#
+# @return [Hash, nil] Connection data keyed by profile name, or nil when unavailable.
+#
 Facter.add(:nm_all_connections) do
   confine kernel: 'Linux'
   confine { Facter::Core::Execution.which('nmcli') }

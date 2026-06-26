@@ -15,6 +15,11 @@
 #   - con_uuid: The UUID of the connection.
 #   - con_path: The D-Bus path of the connection.
 #
+# @example Show NetworkManager devices
+#   puppet facts show nm_all_devices
+#
+# @return [Hash, nil] Device data keyed by interface name, or nil when unavailable.
+#
 Facter.add(:nm_all_devices) do
   confine kernel: 'Linux'
   confine { Facter::Core::Execution.which('nmcli') }

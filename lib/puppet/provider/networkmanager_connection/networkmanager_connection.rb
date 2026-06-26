@@ -46,6 +46,12 @@ class Puppet::Provider::NetworkmanagerConnection::NetworkmanagerConnection < Pup
     []
   end
 
+  # Applies Puppet Resource API changes to NetworkManager profiles.
+  #
+  # @param context [Puppet::ResourceApi::BaseContext] The context for logging.
+  # @param changes [Hash] Resource changes keyed by connection name.
+  # @return [void]
+  #
   def set(context, changes)
     changes.each do |name, change|
       is = change[:is] || {}
@@ -85,6 +91,13 @@ class Puppet::Provider::NetworkmanagerConnection::NetworkmanagerConnection < Pup
     }.freeze
   end
 
+  # Creates a persistent NetworkManager profile and applies its settings.
+  #
+  # @param context [Puppet::ResourceApi::BaseContext] The context for logging.
+  # @param name [String] The connection profile name.
+  # @param resource [Hash] Desired resource values.
+  # @return [void]
+  #
   def create_connection(context, name, resource)
     args = ['connection', 'add', 'con-name', name, 'type', resource.fetch(:type)]
     args += ['ifname', resource[:device]] if resource[:device]
@@ -92,14 +105,33 @@ class Puppet::Provider::NetworkmanagerConnection::NetworkmanagerConnection < Pup
     apply_connection_settings(context, name, resource)
   end
 
+  # Updates settings on an existing NetworkManager profile.
+  #
+  # @param context [Puppet::ResourceApi::BaseContext] The context for logging.
+  # @param name [String] The connection profile name.
+  # @param resource [Hash] Desired resource values.
+  # @return [void]
+  #
   def update_connection(context, name, resource)
     apply_connection_settings(context, name, resource)
   end
 
+  # Deletes a persistent NetworkManager profile.
+  #
+  # @param name [String] The connection profile name.
+  # @return [void]
+  #
   def delete_connection(name)
     nmcli('connection', 'delete', name)
   end
 
+  # Converts managed resource attributes into `nmcli connection modify` arguments.
+  #
+  # @param context [Puppet::ResourceApi::BaseContext] The context for logging.
+  # @param name [String] The connection profile name.
+  # @param resource [Hash] Desired resource values.
+  # @return [void]
+  #
   def apply_connection_settings(context, name, resource)
     validate_routes!(name, resource)
     modifications = []
@@ -117,11 +149,24 @@ class Puppet::Provider::NetworkmanagerConnection::NetworkmanagerConnection < Pup
     maybe_reapply_connection(context, name, resource)
   end
 
+  # Validates IPv4 and IPv6 route declarations before writing them.
+  #
+  # @param name [String] The connection profile name.
+  # @param resource [Hash] Desired resource values.
+  # @return [void]
+  #
   def validate_routes!(name, resource)
     validate_ip_routes!(name, resource, 4)
     validate_ip_routes!(name, resource, 6)
   end
 
+  # Validates route conflicts for one address family.
+  #
+  # @param name [String] The connection profile name.
+  # @param resource [Hash] Desired resource values.
+  # @param family [Integer] Address family, either 4 or 6.
+  # @return [void]
+  #
   def validate_ip_routes!(name, resource, family)
     routes = resource[:"ipv#{family}_routes"] || []
     return if routes.empty?
@@ -146,6 +191,13 @@ class Puppet::Provider::NetworkmanagerConnection::NetworkmanagerConnection < Pup
     raise Puppet::Error, "Connection '#{name}' declares connected network '#{destination}' in ipv#{family}_routes; it is created automatically from ipv#{family}_addresses"
   end
 
+  # Ensures route source addresses match the route address family.
+  #
+  # @param name [String] The connection profile name.
+  # @param routes [Array<Hash>] Route declarations.
+  # @param family [Integer] Address family, either 4 or 6.
+  # @return [void]
+  #
   def validate_route_sources!(name, routes, family)
     routes.each do |route|
       source = route_value(route, :source)
@@ -159,14 +211,35 @@ class Puppet::Provider::NetworkmanagerConnection::NetworkmanagerConnection < Pup
     end
   end
 
+  # Reads a route value from symbol or string keys.
+  #
+  # @param route [Hash] Route declaration.
+  # @param key [Symbol] Route field to read.
+  # @return [Object, nil] The route field value.
+  #
   def route_value(route, key)
     route[key] || route[key.to_s]
   end
 
+  # Compares two route destinations after canonical IP parsing.
+  #
+  # @param left [String] First CIDR value.
+  # @param right [String] Second CIDR value.
+  # @param name [String] The connection profile name.
+  # @param description [String] Field description used in error messages.
+  # @return [Boolean] Whether both values describe the same network.
+  #
   def same_network?(left, right, name, description)
     canonical_network(left, name, description) == canonical_network(right, name, description)
   end
 
+  # Parses a CIDR value into a stable network and prefix tuple.
+  #
+  # @param value [String] CIDR value to parse.
+  # @param name [String] The connection profile name.
+  # @param description [String] Field description used in error messages.
+  # @return [Array(String, Integer)] Canonical network address and prefix length.
+  #
   def canonical_network(value, name, description)
     network = IPAddr.new(value)
     [network.to_s, network.prefix]
@@ -174,6 +247,13 @@ class Puppet::Provider::NetworkmanagerConnection::NetworkmanagerConnection < Pup
     raise Puppet::Error, "Connection '#{name}' has invalid #{description} '#{value}': #{e.message}"
   end
 
+  # Reapplies a modified profile to its runtime device when requested.
+  #
+  # @param context [Puppet::ResourceApi::BaseContext] The context for debug logging.
+  # @param name [String] The connection profile name.
+  # @param resource [Hash] Desired resource values.
+  # @return [void]
+  #
   def maybe_reapply_connection(context, name, resource)
     return unless resource[:reapply]
 
@@ -185,6 +265,12 @@ class Puppet::Provider::NetworkmanagerConnection::NetworkmanagerConnection < Pup
     context.debug("Failed to reapply device '#{device}' for connection '#{name}': #{e}") if context
   end
 
+  # Finds the device to use for `nmcli device reapply`.
+  #
+  # @param name [String] The connection profile name.
+  # @param resource [Hash] Desired resource values.
+  # @return [String, nil] Interface name, or nil when no device is known.
+  #
   def resolve_reapply_device(name, resource)
     return resource[:device] if resource[:device] && !resource[:device].empty?
 
@@ -194,6 +280,11 @@ class Puppet::Provider::NetworkmanagerConnection::NetworkmanagerConnection < Pup
     output.split(':', 2).last.to_s.strip
   end
 
+  # Formats a Puppet value as an `nmcli connection modify` value.
+  #
+  # @param value [Object] Value from the desired resource.
+  # @return [String] Normalized value for nmcli.
+  #
   def normalize_setting_value(value)
     return '' if value.nil?
 
@@ -202,6 +293,11 @@ class Puppet::Provider::NetworkmanagerConnection::NetworkmanagerConnection < Pup
     value.is_a?(Array) ? value.join(',') : value.to_s
   end
 
+  # Formats one route hash for the nmcli route syntax.
+  #
+  # @param entry [Hash] Route declaration.
+  # @return [String, nil] Route string, or nil when no destination is present.
+  #
   def format_route_entry(entry)
     destination = entry[:destination] || entry['destination']
     return nil if destination.nil? || destination.to_s.strip.empty?
@@ -219,6 +315,10 @@ class Puppet::Provider::NetworkmanagerConnection::NetworkmanagerConnection < Pup
 
   # Splits a comma-separated profile value (e.g. "8.8.8.8,1.1.1.1") into an Array.
   # Returns nil when the value is absent or empty.
+  #
+  # @param value [String, nil] Comma-separated profile value.
+  # @return [Array<String>, nil] Parsed values, or nil when absent.
+  #
   def split_profile_list(value)
     return nil if value.nil? || value.strip.empty?
 
@@ -226,12 +326,22 @@ class Puppet::Provider::NetworkmanagerConnection::NetworkmanagerConnection < Pup
     result.empty? ? nil : result
   end
 
+  # Parses the complete nmcli route list for one address family.
+  #
+  # @param value [String, nil] Comma-separated route list from nmcli.
+  # @return [Array<Hash>] Parsed route declarations.
+  #
   def parse_routes(value)
     return [] if value.nil? || value.strip.empty?
 
     value.split(',').map(&:strip).reject(&:empty?).map { |route| parse_route_entry(route) }.compact
   end
 
+  # Parses one nmcli route entry into the resource hash shape.
+  #
+  # @param route [String] Route entry from nmcli.
+  # @return [Hash, nil] Parsed route, or nil for blank input.
+  #
   def parse_route_entry(route)
     parts = route.gsub(%r{\s*=\s*}, '=').split(%r{\s+})
     return nil if parts.empty?
@@ -255,6 +365,11 @@ class Puppet::Provider::NetworkmanagerConnection::NetworkmanagerConnection < Pup
     parsed
   end
 
+  # Maps nmcli runtime state output to the resource enum.
+  #
+  # @param value [String, nil] Raw `GENERAL.STATE` value from nmcli.
+  # @return [String] One of the supported `general_state` values.
+  #
   def normalize_general_state(value)
     return 'unknown' if value.nil? || value.strip.empty?
 
@@ -276,10 +391,8 @@ class Puppet::Provider::NetworkmanagerConnection::NetworkmanagerConnection < Pup
   #
   # @return [Array<String>] An array of connection names.
   #
-  # Example:
-  # Real-world command: `nmcli -t -f name connection show`
-  # Output:
-  #   ["Wired connection 1", "Home WiFi", "VPN Connection"]
+  # @example List profile names
+  #   list_connections
   #
   def list_connections
     nmcli('-t', '-f', 'name', 'connection', 'show').split("\n").map(&:strip).reject(&:empty?)
@@ -288,18 +401,12 @@ class Puppet::Provider::NetworkmanagerConnection::NetworkmanagerConnection < Pup
   # Fetches detailed information about a specific NetworkManager connection.
   # This method executes the `nmcli connection show <connection>` command.
   #
+  # @param context [Puppet::ResourceApi::BaseContext] The context for error logging.
   # @param connection [String] The name of the connection to fetch.
   # @return [Hash] A hash representing the connection's properties.
   #
-  # Example:
-  # Real-world command: `nmcli -t connection show "Home WiFi"`
-  # Output:
-  #   GENERAL.STATE:activated
-  #   connection.type:wifi
-  #   connection.interface-name:wlan0
-  #   ipv4.method:auto
-  #   IP4.ADDRESS[1]:192.168.1.100/24
-  #   IP4.DNS[1]:8.8.8.8
+  # @example Fetch one profile
+  #   fetch_connection_data(context, 'Home WiFi')
   #
   def fetch_connection_data(context, connection)
     # Execute the `nmcli` command to fetch connection details.
@@ -339,6 +446,9 @@ class Puppet::Provider::NetworkmanagerConnection::NetworkmanagerConnection < Pup
   #
   # @param args [Array<String>] The arguments to pass to `nmcli`.
   # @return [String] The output of the command.
+  #
+  # @example Run nmcli with argv arguments
+  #   nmcli('connection', 'show', 'lan0')
   #
   def nmcli(*args)
     command = Puppet::Util.which('nmcli')

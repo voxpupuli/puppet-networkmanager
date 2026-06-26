@@ -2,65 +2,79 @@
 #
 # This class manages the NetworkManager service and configuration.
 #
+# @example Manage the package and service only
+#   include networkmanager
+#
+# @example Manage NetworkManager.conf content
+#   class { 'networkmanager':
+#     manage_nm_config => true,
+#     options          => {
+#       'main'    => { 'plugins' => 'keyfile' },
+#       'logging' => { 'level' => 'INFO' },
+#     },
+#   }
+#
 # @param config_file
-#   The path to the NetworkManager configuration file.
+#   Absolute path to the NetworkManager configuration file managed when
+#   `manage_nm_config` is true. Example: `/etc/NetworkManager/NetworkManager.conf`.
 #
 # @param config_file_mode
-#   The mode of the NetworkManager configuration file.
+#   File mode for `config_file`. Example: `0644`.
 #
 # @param config_file_owner
-#   The owner of the NetworkManager configuration file.
+#   Owner for `config_file`. Example: `root`.
 #
 # @param config_file_group
-#   The group of the NetworkManager configuration file.
+#   Group for `config_file`. Example: `root`.
 #
 # @param manage_nm_config
-#   Whether to manage the NetworkManager configuration file.
+#   Whether to manage `config_file` from the `options` hash.
 #
 # @param manage_nm_package
-#   Whether to manage the NetworkManager package.
+#   Whether to manage the NetworkManager package resource.
 #
 # @param manage_nm_service
-#   Whether to manage the NetworkManager service.
+#   Whether to manage the main NetworkManager service resource.
 #
 # @param manage_nm_service_wait_online
-#   Whether to manage the NetworkManager-wait-online service.
+#   Whether to manage the NetworkManager wait-online service.
 #
 # @param manage_nm_service_dispatcher
-#   Whether to manage the NetworkManager-dispatcher service.
+#   Whether to manage the NetworkManager dispatcher service.
 #
 # @param options
-#   A hash of options to include in the NetworkManager configuration file.
+#   INI-style settings rendered to `config_file` when `manage_nm_config` is true.
+#   Example: `{ 'logging' => { 'level' => 'INFO' } }`.
 #
 # @param package_name
-#   The name of the NetworkManager package.
+#   Package resource title for NetworkManager. Example: `NetworkManager`.
 #
 # @param package_version
-#   The version of the NetworkManager package.
+#   Desired package ensure value. Example: `installed` or `latest`.
 #
 # @param service_name
-#   The name of the NetworkManager service.
+#   Main NetworkManager service resource title. Example: `NetworkManager`.
 #
 # @param service_ensure
-#   The desired state of the NetworkManager service.
+#   Desired state of the main NetworkManager service. Example: `running`.
 #
 # @param service_enable
-#   Whether to enable the NetworkManager service at boot.
+#   Whether to enable the main NetworkManager service at boot.
 #
 # @param service_wait_online_name
-#   The name of the NetworkManager-wait-online service.
+#   Wait-online service resource title. Example: `NetworkManager-wait-online.service`.
 #
 # @param service_wait_online_ensure
-#   The desired state of the NetworkManager-wait-online service.
+#   Desired state of the wait-online service. Example: `running`.
 #
 # @param service_wait_online_enable
 #   Whether to enable the NetworkManager-wait-online service at boot.
 #
 # @param service_dispatcher_name
-#   The name of the NetworkManager-dispatcher service.
+#   Dispatcher service resource title. Example: `NetworkManager-dispatcher.service`.
 #
 # @param service_dispatcher_ensure
-#   The desired state of the NetworkManager-dispatcher service.
+#   Desired state of the dispatcher service. Example: `stopped`.
 #
 # @param service_dispatcher_enable
 #   Whether to enable the NetworkManager-dispatcher service at boot.

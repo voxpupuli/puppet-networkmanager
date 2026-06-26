@@ -18,6 +18,11 @@
 #   - type: The type of the device (e.g., ethernet, wifi).
 #   - uuid: The UUID of the connection.
 #
+# @example Show active NetworkManager profiles
+#   puppet facts show nm_active_connections
+#
+# @return [Hash, nil] Active connection data keyed by profile name, or nil when unavailable.
+#
 Facter.add(:nm_active_connections) do
   confine kernel: 'Linux'
   confine { Facter::Core::Execution.which('nmcli') }

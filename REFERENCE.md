@@ -21,6 +21,26 @@
 
 This class manages the NetworkManager service and configuration.
 
+#### Examples
+
+##### Manage the package and service only
+
+```puppet
+include networkmanager
+```
+
+##### Manage NetworkManager.conf content
+
+```puppet
+class { 'networkmanager':
+  manage_nm_config => true,
+  options          => {
+    'main'    => { 'plugins' => 'keyfile' },
+    'logging' => { 'level' => 'INFO' },
+  },
+}
+```
+
 #### Parameters
 
 The following parameters are available in the `networkmanager` class:
@@ -51,7 +71,8 @@ The following parameters are available in the `networkmanager` class:
 
 Data type: `String[1]`
 
-The path to the NetworkManager configuration file.
+Absolute path to the NetworkManager configuration file managed when
+`manage_nm_config` is true. Example: `/etc/NetworkManager/NetworkManager.conf`.
 
 Default value: `'/etc/NetworkManager/NetworkManager.conf'`
 
@@ -59,7 +80,7 @@ Default value: `'/etc/NetworkManager/NetworkManager.conf'`
 
 Data type: `String[1]`
 
-The mode of the NetworkManager configuration file.
+File mode for `config_file`. Example: `0644`.
 
 Default value: `'0644'`
 
@@ -67,7 +88,7 @@ Default value: `'0644'`
 
 Data type: `String[1]`
 
-The owner of the NetworkManager configuration file.
+Owner for `config_file`. Example: `root`.
 
 Default value: `'root'`
 
@@ -75,7 +96,7 @@ Default value: `'root'`
 
 Data type: `String[1]`
 
-The group of the NetworkManager configuration file.
+Group for `config_file`. Example: `root`.
 
 Default value: `'root'`
 
@@ -83,7 +104,7 @@ Default value: `'root'`
 
 Data type: `Boolean`
 
-Whether to manage the NetworkManager configuration file.
+Whether to manage `config_file` from the `options` hash.
 
 Default value: `false`
 
@@ -91,7 +112,7 @@ Default value: `false`
 
 Data type: `Boolean`
 
-Whether to manage the NetworkManager package.
+Whether to manage the NetworkManager package resource.
 
 Default value: `true`
 
@@ -99,7 +120,7 @@ Default value: `true`
 
 Data type: `Boolean`
 
-Whether to manage the NetworkManager service.
+Whether to manage the main NetworkManager service resource.
 
 Default value: `true`
 
@@ -107,7 +128,7 @@ Default value: `true`
 
 Data type: `Boolean`
 
-Whether to manage the NetworkManager-wait-online service.
+Whether to manage the NetworkManager wait-online service.
 
 Default value: `false`
 
@@ -115,7 +136,7 @@ Default value: `false`
 
 Data type: `Boolean`
 
-Whether to manage the NetworkManager-dispatcher service.
+Whether to manage the NetworkManager dispatcher service.
 
 Default value: `false`
 
@@ -123,7 +144,8 @@ Default value: `false`
 
 Data type: `Hash`
 
-A hash of options to include in the NetworkManager configuration file.
+INI-style settings rendered to `config_file` when `manage_nm_config` is true.
+Example: `{ 'logging' => { 'level' => 'INFO' } }`.
 
 Default value: `{}`
 
@@ -131,7 +153,7 @@ Default value: `{}`
 
 Data type: `String[1]`
 
-The name of the NetworkManager package.
+Package resource title for NetworkManager. Example: `NetworkManager`.
 
 Default value: `'NetworkManager'`
 
@@ -139,7 +161,7 @@ Default value: `'NetworkManager'`
 
 Data type: `String[1]`
 
-The version of the NetworkManager package.
+Desired package ensure value. Example: `installed` or `latest`.
 
 Default value: `'installed'`
 
@@ -147,7 +169,7 @@ Default value: `'installed'`
 
 Data type: `String[1]`
 
-The name of the NetworkManager service.
+Main NetworkManager service resource title. Example: `NetworkManager`.
 
 Default value: `'NetworkManager'`
 
@@ -155,7 +177,7 @@ Default value: `'NetworkManager'`
 
 Data type: `String[1]`
 
-The desired state of the NetworkManager service.
+Desired state of the main NetworkManager service. Example: `running`.
 
 Default value: `'running'`
 
@@ -163,7 +185,7 @@ Default value: `'running'`
 
 Data type: `Boolean`
 
-Whether to enable the NetworkManager service at boot.
+Whether to enable the main NetworkManager service at boot.
 
 Default value: `true`
 
@@ -171,7 +193,7 @@ Default value: `true`
 
 Data type: `String[1]`
 
-The name of the NetworkManager-wait-online service.
+Wait-online service resource title. Example: `NetworkManager-wait-online.service`.
 
 Default value: `"${service_name}-wait-online.service"`
 
@@ -179,7 +201,7 @@ Default value: `"${service_name}-wait-online.service"`
 
 Data type: `String[1]`
 
-The desired state of the NetworkManager-wait-online service.
+Desired state of the wait-online service. Example: `running`.
 
 Default value: `'running'`
 
@@ -195,7 +217,7 @@ Default value: `true`
 
 Data type: `String[1]`
 
-The name of the NetworkManager-dispatcher service.
+Dispatcher service resource title. Example: `NetworkManager-dispatcher.service`.
 
 Default value: `"${service_name}-dispatcher.service"`
 
@@ -203,7 +225,7 @@ Default value: `"${service_name}-dispatcher.service"`
 
 Data type: `String[1]`
 
-The desired state of the NetworkManager-dispatcher service.
+Desired state of the dispatcher service. Example: `stopped`.
 
 Default value: `'stopped'`
 

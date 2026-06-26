@@ -175,16 +175,6 @@ Add tests for:
 Acceptance tests must continue to avoid activating default routes or modifying
 management, NAT, or SSH interfaces.
 
-## Release and documentation work
-
-The following concrete issues currently exist:
-      because the file is missing.
-
-- [ ] Make `bundle exec rake strings:validate:reference` pass.
-- [ ] Correct the invalid `@example` format in the Resource API type.
-- [ ] Improve Puppet Strings documentation coverage.
-- [ ] Configure Dependabot for GitHub Actions and Bundler where appropriate.
-
 ## Potential features
 
 Implement features incrementally instead of exposing arbitrary NetworkManager
