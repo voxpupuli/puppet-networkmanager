@@ -178,14 +178,11 @@ management, NAT, or SSH interfaces.
 ## Release and documentation work
 
 The following concrete issues currently exist:
-
-- [ ] Add `CHANGELOG.md`; `bundle exec rake check_changelog` currently fails
       because the file is missing.
-- [ ] Regenerate `REFERENCE.md` after the route `source` addition.
+
 - [ ] Make `bundle exec rake strings:validate:reference` pass.
 - [ ] Correct the invalid `@example` format in the Resource API type.
 - [ ] Improve Puppet Strings documentation coverage.
-- [ ] Correct `GCGConfig.project = 'puppet-extlib'` in `Rakefile`.
 - [ ] Configure Dependabot for GitHub Actions and Bundler where appropriate.
 
 ## Potential features
