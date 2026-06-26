@@ -292,10 +292,10 @@ Default value: `auto`
 
 ##### `ipv4_routes`
 
-Data type: `Optional[Array[Struct[{destination => Pattern[/\\A\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\/\\d{1,2}\\z/], Optional[next_hop] => Pattern[/\\A\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\z/], Optional[metric] => Integer[0]}]]]`
+Data type: `Optional[Array[Struct[{destination => Pattern[/\\A\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\/\\d{1,2}\\z/], Optional[next_hop] => Pattern[/\\A\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\z/], Optional[metric] => Integer[0], Optional[source] => Pattern[/\\A\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\z/]}]]]`
 _*this data type contains a regex that may not be accurately reflected in generated documentation_
 
-Additional static IPv4 routes. Do not declare the connected network from ipv4_addresses or a default route already represented by ipv4_gateway.
+Additional static IPv4 routes with optional preferred source addresses. Do not declare the connected network from ipv4_addresses or a default route already represented by ipv4_gateway.
 
 ##### `ipv6_addresses`
 
@@ -325,9 +325,9 @@ Default value: `auto`
 
 ##### `ipv6_routes`
 
-Data type: `Optional[Array[Struct[{destination => String[1], Optional[next_hop] => String[1], Optional[metric] => Integer[0]}]]]`
+Data type: `Optional[Array[Struct[{destination => String[1], Optional[next_hop] => String[1], Optional[metric] => Integer[0], Optional[source] => String[1]}]]]`
 
-Additional static IPv6 routes. Do not declare the connected network from ipv6_addresses or a default route already represented by ipv6_gateway.
+Additional static IPv6 routes with optional preferred source addresses. Do not declare the connected network from ipv6_addresses or a default route already represented by ipv6_gateway.
 
 ##### `type`
 

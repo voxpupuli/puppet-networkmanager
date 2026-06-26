@@ -35,6 +35,7 @@ describe 'networkmanager_connection resource' do
             destination => '198.51.100.0/24',
             next_hop    => '192.0.2.1',
             metric      => 100,
+            source      => '192.0.2.10',
           },
         ],
         ipv6_method    => disabled,
@@ -60,6 +61,7 @@ describe 'networkmanager_connection resource' do
             destination => '203.0.113.0/24',
             next_hop    => '192.0.2.1',
             metric      => 200,
+            source      => '192.0.2.20',
           },
         ],
         ipv6_method    => disabled,
@@ -106,6 +108,7 @@ describe 'networkmanager_connection resource' do
       expect(routes).to include('198.51.100.0/24')
       expect(routes).to include('192.0.2.1')
       expect(routes).to match(%r{\b100\b})
+      expect(routes).to include('192.0.2.10')
     end
   end
 
@@ -126,6 +129,7 @@ describe 'networkmanager_connection resource' do
       expect(routes).to include('203.0.113.0/24')
       expect(routes).to include('192.0.2.1')
       expect(routes).to match(%r{\b200\b})
+      expect(routes).to include('192.0.2.20')
       expect(routes).not_to include('198.51.100.0/24')
     end
   end

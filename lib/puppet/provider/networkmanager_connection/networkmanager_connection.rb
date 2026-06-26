@@ -126,6 +126,8 @@ class Puppet::Provider::NetworkmanagerConnection::NetworkmanagerConnection < Pup
     routes = resource[:"ipv#{family}_routes"] || []
     return if routes.empty?
 
+    validate_route_sources!(name, routes, family)
+
     gateway = resource[:"ipv#{family}_gateway"]
     default_destination = ((family == 4) ? '0.0.0.0/0' : '::/0')
 
@@ -142,6 +144,19 @@ class Puppet::Provider::NetworkmanagerConnection::NetworkmanagerConnection < Pup
 
     destination = route_value(duplicate, :destination)
     raise Puppet::Error, "Connection '#{name}' declares connected network '#{destination}' in ipv#{family}_routes; it is created automatically from ipv#{family}_addresses"
+  end
+
+  def validate_route_sources!(name, routes, family)
+    routes.each do |route|
+      source = route_value(route, :source)
+      next if source.nil?
+
+      address = IPAddr.new(source)
+      valid_family = (family == 4) ? address.ipv4? : address.ipv6?
+      raise ArgumentError, 'address family does not match route' unless valid_family && !source.include?('/')
+    rescue ArgumentError => e
+      raise Puppet::Error, "Connection '#{name}' has invalid ipv#{family} route source '#{source}': #{e.message}"
+    end
   end
 
   def route_value(route, key)
@@ -193,10 +208,12 @@ class Puppet::Provider::NetworkmanagerConnection::NetworkmanagerConnection < Pup
 
     next_hop = entry[:next_hop] || entry['next_hop']
     metric = entry[:metric] || entry['metric']
+    source = entry[:source] || entry['source']
 
     parts = [destination.to_s.strip]
     parts << next_hop.to_s.strip if next_hop && !next_hop.to_s.strip.empty?
     parts << metric.to_s.strip if metric && !metric.to_s.strip.empty?
+    parts << "src=#{source.to_s.strip}" if source && !source.to_s.strip.empty?
     parts.join(' ')
   end
 
@@ -216,12 +233,21 @@ class Puppet::Provider::NetworkmanagerConnection::NetworkmanagerConnection < Pup
   end
 
   def parse_route_entry(route)
-    parts = route.split(%r{\s+})
+    parts = route.gsub(%r{\s*=\s*}, '=').split(%r{\s+})
     return nil if parts.empty?
 
-    parsed = { 'destination' => parts[0] }
-    parsed['next_hop'] = parts[1] if parts[1] && !parts[1].empty?
-    parsed['metric'] = Integer(parts[2], 10) if parts[2] && !parts[2].empty?
+    parsed = { 'destination' => parts.shift }
+    attributes, positional = parts.partition { |part| part.include?('=') }
+
+    if positional[0]&.match?(%r{\A\d+\z})
+      parsed['metric'] = Integer(positional[0], 10)
+    elsif positional[0] && !positional[0].empty?
+      parsed['next_hop'] = positional[0]
+      parsed['metric'] = Integer(positional[1], 10) if positional[1] && !positional[1].empty?
+    end
+
+    source = attributes.filter_map { |attribute| attribute.split('=', 2) if attribute.start_with?('src=') }.first
+    parsed['source'] = source[1] if source && source[1] && !source[1].empty?
     parsed
   rescue ArgumentError
     # The metric is optional. Keep the usable route fields when nmcli reports
