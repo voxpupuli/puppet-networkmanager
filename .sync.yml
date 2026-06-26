@@ -1,0 +1,6 @@
+.github/workflows/ci.yml:
+  acceptance_tests: true
+  with:
+    beaker_hypervisor: vagrant_libvirt
+    install_vagrant_dependencies: true
+    timeout_minutes: 90
