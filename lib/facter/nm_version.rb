@@ -5,6 +5,11 @@
 #   This fact is only available on Linux systems with NetworkManager installed.
 #   The fact retrieves the version using the `NetworkManager` command.
 #
+# @example Show the installed NetworkManager version
+#   puppet facts show nm_version
+#
+# @return [String, nil] NetworkManager version string, or nil when unavailable.
+#
 Facter.add(:nm_version) do
   confine kernel: 'Linux'
   confine { Facter::Core::Execution.which('NetworkManager') }
