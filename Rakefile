@@ -19,7 +19,7 @@ rescue LoadError
   # only available if gem group releases is installed
 else
   GCGConfig.user = 'voxpupuli'
-  GCGConfig.project = 'puppet-extlib'
+  GCGConfig.project = 'puppet-networkmanager'
 end
 
 desc "Run main 'test' task and report merged results to coveralls"
