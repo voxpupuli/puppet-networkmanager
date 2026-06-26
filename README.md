@@ -1,5 +1,11 @@
 # NetworkManager module for Puppet
 
+
+[![Build Status](https://github.com/voxpupuli/puppet-networkmanager/workflows/CI/badge.svg)](https://github.com/voxpupuli/puppet-networkmanager/actions?query=workflow%3ACI)
+[![Release](https://github.com/voxpupuli/puppet-networkmanager/actions/workflows/release.yml/badge.svg)](https://github.com/voxpupuli/puppet-networkmanager/actions/workflows/release.yml)
+[![Puppet Forge](https://img.shields.io/puppetforge/v/puppet/networkmanager.svg)](https://forge.puppetlabs.com/puppet/networkmanager)
+[![Puppet Forge - downloads](https://img.shields.io/puppetforge/dt/puppet/networkmanager.svg)](https://forge.puppetlabs.com/puppet/networkmanager)
+[![Puppet Forge - endorsement](https://img.shields.io/puppetforge/e/puppet/networkmanager.svg)](https://forge.puppetlabs.com/puppet/networkmanager)
 [![License](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)](LICENSE)
 [![Sponsored by betadots GmbH](https://img.shields.io/badge/Sponsored%20by-betadots%20GmbH-blue.svg)](https://www.betadots.de)
 
