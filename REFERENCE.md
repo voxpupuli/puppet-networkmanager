@@ -315,7 +315,7 @@ An array of DNS servers (e.g., ["8.8.8.8"]).
 
 Data type: `Optional[Array[String[1]]]`
 
-An array of IPv6 DNS search domains, e.g. ["corp.com", "ratchets.com"]
+An array of DNS search domains, e.g. ["corp.com", "ratchets.com"]
 
 ##### `ipv4_gateway`
 
