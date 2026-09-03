@@ -70,7 +70,7 @@ Puppet::ResourceApi.register_type(
 
     ipv4_dns_search: {
       type: 'Optional[Array[String[1]]]',
-      desc: 'An array of DNS search domains, e.g. ["corp.com", "ratchets.com"]'
+      desc: 'An array of DNS search domains, e.g. ["corp.com", "ratchets.com"]',
     },
 
     ipv4_gateway: {
@@ -101,7 +101,7 @@ Puppet::ResourceApi.register_type(
 
     ipv6_dns_search: {
       type: 'Optional[Array[String[1]]]',
-      desc: 'An array of IPv6 DNS search domains, e.g. ["corp.com", "ratchets.com"]'
+      desc: 'An array of IPv6 DNS search domains, e.g. ["corp.com", "ratchets.com"]',
     },
 
     ipv6_gateway: {
