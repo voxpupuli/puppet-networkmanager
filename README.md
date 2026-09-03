@@ -80,16 +80,17 @@ read and modify persistent NetworkManager profiles.
 
 ```puppet
 networkmanager_connection { 'lan0':
-  ensure         => 'present',
-  type           => '802-3-ethernet',
-  device         => 'enp1s0',
-  ipv4_method    => 'manual',
-  ipv4_addresses => ['192.0.2.10/24'],
-  ipv4_dns       => ['1.1.1.1', '8.8.8.8'],
-  ipv4_gateway   => '192.0.2.1',
-  ipv4_routes    => [],
-  ipv6_method    => 'ignore',
-  reapply        => true,
+  ensure          => 'present',
+  type            => '802-3-ethernet',
+  device          => 'enp1s0',
+  ipv4_method     => 'manual',
+  ipv4_addresses  => ['192.0.2.10/24'],
+  ipv4_dns        => ['1.1.1.1', '8.8.8.8'],
+  ipv4_dns_search => ['corp.com', 'ratchets.com'],
+  ipv4_gateway    => '192.0.2.1',
+  ipv4_routes     => [],
+  ipv6_method     => 'ignore',
+  reapply         => true,
 }
 ```
 
@@ -135,15 +136,16 @@ and selects the preferred source address for traffic using that route.
 
 ```puppet
 networkmanager_connection { 'ipv6-lan':
-  ensure         => 'present',
-  type           => '802-3-ethernet',
-  device         => 'enp2s0',
-  ipv4_method    => 'disabled',
-  ipv6_method    => 'manual',
-  ipv6_addresses => ['2001:db8:1::10/64'],
-  ipv6_dns       => ['2001:4860:4860::8888'],
-  ipv6_gateway   => '2001:db8:1::1',
-  ipv6_routes    => [
+  ensure          => 'present',
+  type            => '802-3-ethernet',
+  device          => 'enp2s0',
+  ipv4_method     => 'disabled',
+  ipv6_method     => 'manual',
+  ipv6_addresses  => ['2001:db8:1::10/64'],
+  ipv6_dns        => ['2001:4860:4860::8888'],
+  ipv6_dns_search => ['corp.com', 'ratchets.com'],
+  ipv6_gateway    => '2001:db8:1::1',
+  ipv6_routes     => [
     {
       destination => '2001:db8:2::/64',
       next_hop    => '2001:db8:1::fe',
@@ -151,7 +153,7 @@ networkmanager_connection { 'ipv6-lan':
       source      => '2001:db8:1::10',
     },
   ],
-  reapply        => true,
+  reapply         => true,
 }
 ```
 

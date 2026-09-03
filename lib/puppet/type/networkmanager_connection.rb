@@ -68,6 +68,11 @@ Puppet::ResourceApi.register_type(
       desc: 'An array of DNS servers (e.g., ["8.8.8.8"]).',
     },
 
+    ipv4_dns_search: {
+      type: 'Optional[Array[String[1]]]',
+      desc: 'An array of DNS search domains, e.g. ["corp.com", "ratchets.com"]',
+    },
+
     ipv4_gateway: {
       type: 'Optional[Pattern[/\\A\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\z/]]',
       desc: 'The IPv4 gateway address (e.g., "192.168.0.1").',
@@ -92,6 +97,11 @@ Puppet::ResourceApi.register_type(
     ipv6_dns: {
       type: 'Optional[Array[String[1]]]',
       desc: 'An array of IPv6 DNS servers (e.g., ["2001:4860:4860::8888"]).',
+    },
+
+    ipv6_dns_search: {
+      type: 'Optional[Array[String[1]]]',
+      desc: 'An array of IPv6 DNS search domains, e.g. ["corp.com", "ratchets.com"]',
     },
 
     ipv6_gateway: {

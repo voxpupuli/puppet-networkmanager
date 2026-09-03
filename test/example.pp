@@ -36,21 +36,22 @@
 # `nmcli connection up enp0s9-test` after Puppet has created it.
 #
 # networkmanager_connection { 'enp0s9-test':
-#   ensure         => 'present',
-#   type           => '802-3-ethernet',
-#   device         => 'enp0s9',
-#   ipv4_method    => 'manual',
-#   ipv4_addresses => ['192.168.56.11/24'],
-#   ipv4_dns       => ['1.1.1.1'],
-#   ipv4_routes    => [
+#   ensure          => 'present',
+#   type            => '802-3-ethernet',
+#   device          => 'enp0s9',
+#   ipv4_method     => 'manual',
+#   ipv4_addresses  => ['192.168.56.11/24'],
+#   ipv4_dns        => ['1.1.1.1'],
+#   ipv4_dns_search => ['corp.com','ratchets.com'],
+#   ipv4_routes     => [
 #     {
 #       'destination' => '198.51.100.0/24',
 #       'next_hop'    => '192.168.56.1',
 #       'metric'      => 100,
 #     },
 #   ],
-#   ipv6_method    => 'ignore',
-#   reapply        => false,
+#   ipv6_method     => 'ignore',
+#   reapply         => false,
 # }
 
 # To remove the test profile, replace the resource above with:
