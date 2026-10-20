@@ -33,6 +33,7 @@ module PuppetX
             'method' => data['ipv4.method'],
             'address' => split_profile_list(data['ipv4.addresses']),
             'dns' => split_profile_list(data['ipv4.dns']),
+            'dns_search' => split_profile_list(data['ipv4.dns-search']),
             'gateway' => data['ipv4.gateway'],
           }.compact
           details['ipv4'] = ipv4 unless ipv4.empty?
@@ -41,6 +42,7 @@ module PuppetX
             'method' => data['ipv6.method'],
             'address' => split_profile_list(data['ipv6.addresses']),
             'dns' => split_profile_list(data['ipv6.dns']),
+            'dns_search' => split_profile_list(data['ipv6.dns-search']),
             'gateway' => data['ipv6.gateway'],
           }.compact
           details['ipv6'] = ipv6 unless ipv6.empty?

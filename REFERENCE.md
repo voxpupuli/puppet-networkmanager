@@ -311,6 +311,12 @@ _*this data type contains a regex that may not be accurately reflected in genera
 
 An array of DNS servers (e.g., ["8.8.8.8"]).
 
+##### `ipv4_dns_search`
+
+Data type: `Optional[Array[String[1]]]`
+
+An array of DNS search domains, e.g. ["corp.com", "ratchets.com"]
+
 ##### `ipv4_gateway`
 
 Data type: `Optional[Pattern[/\\A\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\z/]]`
@@ -344,6 +350,12 @@ An array of static IPv6 addresses (e.g., ["2001:db8::1/64", "2001:db8::2/64"]).
 Data type: `Optional[Array[String[1]]]`
 
 An array of IPv6 DNS servers (e.g., ["2001:4860:4860::8888"]).
+
+##### `ipv6_dns_search`
+
+Data type: `Optional[Array[String[1]]]`
+
+An array of IPv6 DNS search domains, e.g. ["corp.com", "ratchets.com"]
 
 ##### `ipv6_gateway`
 
