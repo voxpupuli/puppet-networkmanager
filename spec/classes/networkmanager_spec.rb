@@ -6,12 +6,13 @@ describe 'networkmanager' do
   on_supported_os.each do |os, os_facts|
     context "on #{os}" do
       let(:facts) { os_facts }
+      let(:package_name) { (os_facts[:os]['family'] == 'Debian') ? 'network-manager' : 'NetworkManager' }
 
       it { is_expected.to compile.with_all_deps }
       it { is_expected.to contain_class('networkmanager::install').that_comes_before('Class[networkmanager::config]') }
       it { is_expected.to contain_class('networkmanager::config').that_notifies('Class[networkmanager::service]') }
       it { is_expected.to contain_class('networkmanager::service') }
-      it { is_expected.to contain_package('NetworkManager').with_ensure('installed') }
+      it { is_expected.to contain_package(package_name).with_ensure('installed') }
       it { is_expected.to contain_service('NetworkManager').with(ensure: 'running', enable: true) }
 
       context 'with custom package and service parameters' do
@@ -37,7 +38,7 @@ describe 'networkmanager' do
           }
         end
 
-        it { is_expected.not_to contain_package('NetworkManager') }
+        it { is_expected.not_to contain_package(package_name) }
         it { is_expected.not_to contain_service('NetworkManager') }
       end
 
