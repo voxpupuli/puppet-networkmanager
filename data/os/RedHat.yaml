@@ -1,2 +1,2 @@
 ---
-networkmanager::package: NetworkManager
+networkmanager::package_name: NetworkManager
