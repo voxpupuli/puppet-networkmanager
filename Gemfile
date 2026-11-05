@@ -14,6 +14,7 @@ group :development do
 end
 
 group :system_tests do
+  gem 'beaker-hostgenerator', github: 'voxpupuli/beaker-hostgenerator', branch: 'centos'
   gem 'voxpupuli-acceptance', '~> 4.4',  :require => false
 end
 
