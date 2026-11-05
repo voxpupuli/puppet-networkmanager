@@ -391,4 +391,3 @@ The name of the NetworkManager connection.
 Data type: `Boolean`
 
 Whether to run an immediate runtime reapply on the device after profile changes.
-
