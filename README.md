@@ -45,10 +45,13 @@ include networkmanager
 
 By default, the class:
 
-- installs the `NetworkManager` package;
+- installs the `NetworkManager` package (`network-manager` on Debian);
 - enables and starts the `NetworkManager` service;
 - does not manage `/etc/NetworkManager/NetworkManager.conf`;
 - does not manage the wait-online or dispatcher services.
+
+On Debian, interfaces defined in `/etc/network/interfaces` stay under ifupdown
+control unless NetworkManager's `ifupdown` plugin is configured otherwise.
 
 ### Manage NetworkManager.conf
 

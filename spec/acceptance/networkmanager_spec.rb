@@ -19,7 +19,7 @@ describe 'networkmanager class' do
     apply_manifest(manifest, catch_changes: true)
   end
 
-  describe package('NetworkManager') do
+  describe package((fact('os.family') == 'Debian') ? 'network-manager' : 'NetworkManager') do
     it { is_expected.to be_installed }
   end
 
